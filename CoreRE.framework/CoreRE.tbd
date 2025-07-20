@@ -1,0 +1,49 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
+install-name:    '/System/Library/PrivateFrameworks/CoreRE.framework/CoreRE'
+swift-abi-version: 7
+exports:
+  - targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
+    symbols:              [ _REEntityGetDebugDescription,
+    _REEntityGetDebugDescriptionRecursive,
+    _REEntityCreate,
+    _REEntityInsertChild,
+    _REEntitySetName,
+    _REEntityGetName,
+    _REEntityFindInHierarchyByName,
+    _REMeshComponentGetComponentType,
+    _REComponentCreateByClass,
+    _REComponentClassGetName,
+    _REEntityGetComponentByClass,
+    _REEntityAddComponentByClass,
+    _REEntityGetOrAddComponentByClass,
+    _REEntityRemoveComponentByClass,
+    _RESphereShapeCreate,
+    _RECollisionMeshShapeGetMesh,
+    _REMeshComponentSetMesh,
+    _REEngineGetShared,
+    _REServiceLocatorGetAssetManager,
+    _REEngineGetServiceLocator,
+    _REAssetManagerCreateAssetHandle,
+    _REAssetHandleCopyAssetPath,
+    _REMeshAssetCreateSphereDescriptor,
+    _REGeomBuildSphereDefaultOptions,
+    _REAssetHandleCreateNewMutableWithAssetDescriptors,
+    _REAssetHandleLoadNow,
+    _REAssetSetNetworkSharingMode,
+    _RECGColorToColorGamut,
+    _REMaterialParameterBlockValueCreate,
+    _REMaterialParameterBlockValueClearParameter,
+    _REMaterialParameterBlockValueSetColor4,
+    _REMaterialParameterBlockValueSetFloat,
+    _REMaterialParameterBlockValueGetFloat,
+    _REMeshComponentAddMaterial,
+    _REMaterialParameterBlockArrayComponentGetComponentType,
+    _REMaterialParameterBlockArrayComponentSetBlockValueAtIndex,
+    _RERetain,
+    _RERelease,
+    _REGetRetainCount ]
+    objc-classes:         [  ]
+    objc-ivars:           [  ]
+...
