@@ -13,3 +13,14 @@
 #import <CoreRE/REMaterialParameter.h>
 #import <CoreRE/REColorGamut.h>
 #import <CoreRE/REMaterialParameterBlockArrayComponent.h>
+#import <CoreRE/RETransformComponent.h>
+#import <CoreRE/REPresentationComponent.h>
+#import <CoreRE/REMeshSceneComponent.h>
+#import <CoreRE/RESubsceneComponent.h>
+#import <CoreRE/REWorldRootComponent.h>
+#import <CoreRE/REAnchorComponent.h>
+#import <CoreRE/REAnchoringComponent.h>
+#import <CoreRE/REScene.h>
+#import <CoreRE/RECALayerComponent.h>
+#import <CoreRE/RECALayerClientComponent.h>
+#import <CoreRE/RENetworkComponent.h>

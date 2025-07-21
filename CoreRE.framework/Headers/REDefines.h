@@ -41,3 +41,5 @@ struct REMaterialParameter {};
 struct REColorGamut4F {
     float r, g, b, a;
 };
+
+struct REScene {};

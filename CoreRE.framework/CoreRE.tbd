@@ -43,7 +43,30 @@ exports:
     _REMaterialParameterBlockArrayComponentSetBlockValueAtIndex,
     _RERetain,
     _RERelease,
-    _REGetRetainCount ]
+    _REGetRetainCount,
+    _RETransformComponentGetComponentType,
+    _RETransformComponentSetWorldMatrix4x4F,
+    _RETransformComponentGetWorldMatrix4x4F,
+    _RETransformComponentGetParentWorldMatrix4x4F,
+    _REComponentCopy,
+    _REEntityAddExistingComponent,
+    _REPresentationComponentGetComponentType,
+    _REMeshSceneComponentGetComponentType,
+    _RESubsceneComponentGetComponentType,
+    _REWorldRootComponentGetComponentType,
+    _REAnchorComponentGetComponentType,
+    _REAnchoringComponentGetComponentType,
+    _REEntityIsAnchored,
+    _REEntityGetSceneNullable,
+    _REEntityGetParent,
+    _REEntityCopy,
+    _RECALayerComponentGetComponentType,
+    _REEntityRemoveAllComponents,
+    _REEntityGetComponentCount,
+    _REEntityGetComponentAtIndex,
+    _REComponentGetClass,
+    _RECALayerClientComponentGetComponentType,
+    _RENetworkComponentGetComponentType ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...
