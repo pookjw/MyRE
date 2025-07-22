@@ -7,6 +7,7 @@
 
 #import "ClassesViewController.h"
 #import "BasicViewController.h"
+#import "CALayerViewController.h"
 
 @interface ClassesViewController ()
 @property (class, nonatomic, readonly, getter=_classes) NSArray<Class> *classes;
@@ -18,6 +19,7 @@
 
 + (NSArray<Class> *)_classes {
     return @[
+        [CALayerViewController class],
         [BasicViewController class]
     ];
 }
@@ -46,7 +48,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    Class _class = ClassesViewController.classes.lastObject;
+    Class _class = ClassesViewController.classes.firstObject;
+//    Class _class = [BasicViewController class];
     __kindof UIViewController *viewController = [[_class alloc] init];
     [self.navigationController pushViewController:viewController animated:YES];
     [viewController release];

@@ -67,7 +67,9 @@ exports:
     _REComponentGetClass,
     _RECALayerClientComponentGetComponentType,
     _RENetworkComponentGetComponentType,
-    _REEntityGetChildren ]
+    _REEntityGetChildren,
+    _RECALayerGetCALayerClientComponent,
+    _RECALayerDrawInContextBlock ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

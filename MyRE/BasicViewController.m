@@ -79,7 +79,10 @@
 
 - (void)viewDidMoveToWindow:(UIWindow *)window shouldAppearOrDisappear:(BOOL)shouldAppearOrDisappear {
     [super viewDidMoveToWindow:window shouldAppearOrDisappear:shouldAppearOrDisappear];
-    NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive([self.view.window reEntity]));
+    
+    if (window) {
+        NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive([self.view.window reEntity]));
+    }
 }
 
 @end
