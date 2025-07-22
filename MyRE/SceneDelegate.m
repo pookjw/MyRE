@@ -12,7 +12,7 @@
 #import "SceneDelegate.h"
 #import "ClassesViewController.h"
 #import <MRUIKit/MRUIKit.h>
-#import <CoreRE/CoreRE.h>
+#import "Utils.h"
 
 @interface SceneDelegate ()
 
@@ -34,6 +34,9 @@
     [navigationController release];
     self.window = window;
     [window makeKeyAndVisible];
+    
+    NSLog(@"UIWindow : %@", [MR_REEntityCopyComponentNames([window reEntity]) autorelease]);
+    NSLog(@"UIWindowScene : %@", [MR_REEntityCopyComponentNames([(UIWindowScene *)scene reRootEntity]) autorelease]);
     [window release];
 }
 
