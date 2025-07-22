@@ -35,8 +35,8 @@
     self.window = window;
     [window makeKeyAndVisible];
     
-    NSLog(@"UIWindow : %@", [MR_REEntityCopyComponentNames([window reEntity]) autorelease]);
-    NSLog(@"UIWindowScene : %@", [MR_REEntityCopyComponentNames([(UIWindowScene *)scene reRootEntity]) autorelease]);
+    NSLog(@"UIWindow : %@", MR_REEntityGetComponentNames([window reEntity]));
+    NSLog(@"UIWindowScene : %@", MR_REEntityGetComponentNames([(UIWindowScene *)scene reRootEntity]));
     [window release];
 }
 

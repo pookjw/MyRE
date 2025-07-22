@@ -9,6 +9,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-RE_EXTERN NSString * MR_REEntityCopyComponentNames(struct REEntity *entity);
+RE_EXTERN NSString * MR_REEntityGetComponentNames(struct REEntity *entity);
+RE_EXTERN NSString * MR_REEntityGetRichDebugDescription(struct REEntity *entity);
+RE_EXTERN NSString * MR_REEntityGetRichDebugDescriptionRecursive(struct REEntity *entity);
 
 NS_ASSUME_NONNULL_END

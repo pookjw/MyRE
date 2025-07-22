@@ -10,6 +10,7 @@
 #import <CoreRE/CoreRE.h>
 #import <UIKitPrivate/UIKitPrivate.h>
 #include <simd/simd.h>
+#import "Utils.h"
 
 @implementation BasicViewController
 
@@ -74,6 +75,11 @@
     }
     
     RERelease(customEntity);
+}
+
+- (void)viewDidMoveToWindow:(UIWindow *)window shouldAppearOrDisappear:(BOOL)shouldAppearOrDisappear {
+    [super viewDidMoveToWindow:window shouldAppearOrDisappear:shouldAppearOrDisappear];
+    NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive([self.view.window reEntity]));
 }
 
 @end

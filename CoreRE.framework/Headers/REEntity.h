@@ -22,5 +22,6 @@ RE_EXTERN struct REEntity * REEntityCopy(struct REEntity *);
 RE_EXTERN void REEntityRemoveAllComponents(struct REEntity *);
 RE_EXTERN NSUInteger REEntityGetComponentCount(struct REEntity *);
 RE_EXTERN struct REComponent * REEntityGetComponentAtIndex(struct REEntity *, NSInteger);
+RE_EXTERN unsigned long REEntityGetChildren(struct REEntity *entity, struct REEntity * _Nonnull * _Nonnull children, unsigned long allocatedCount);
 
 NS_ASSUME_NONNULL_END
