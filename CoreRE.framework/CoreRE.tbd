@@ -69,7 +69,24 @@ exports:
     _RENetworkComponentGetComponentType,
     _REEntityGetChildren,
     _RECALayerGetCALayerClientComponent,
-    _RECALayerDrawInContextBlock ]
+    _RECALayerClientComponentGetCALayer,
+    _RECALayerServiceCreateRootComponent,
+    _RECALayerComponentSetRespectsLayerTransform,
+    _RECALayerClientComponentSetRespectsLayerTransform,
+    _RECALayerComponentRootSetPointsPerMeter,
+    _RECALayerComponentSetShouldSyncToRemotes,
+    _RECALayerClientComponentSetShouldSyncToRemotes,
+    _RECALayerComponentGetCALayer,
+    _RECALayerComponentSetUpdatesMesh,
+    _RECALayerClientComponentSetUpdatesMesh,
+    _RECALayerComponentSetUpdatesMaterial,
+    _RECALayerClientComponentSetUpdatesMaterial,
+    _RECALayerComponentSetUpdatesTexture,
+    _RECALayerClientComponentSetUpdatesTexture,
+    _RECALayerComponentSetUpdatesClippingPrimitive,
+    _RECALayerClientComponentSetUpdatesClippingPrimitive,
+    _RECAContextCreateDefaultOptions,
+    _RECALayerServiceGetOrCreateCAContext ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

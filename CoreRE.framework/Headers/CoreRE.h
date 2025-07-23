@@ -1,4 +1,4 @@
-#import <CoreRE/REDefines.h>
+#import <CoreRE/Defines.h>
 #import <CoreRE/Base.h>
 #import <CoreRE/REEntity.h>
 #import <CoreRE/RECollisionMeshShape.h>
@@ -24,3 +24,5 @@
 #import <CoreRE/RECALayerComponent.h>
 #import <CoreRE/RECALayerClientComponent.h>
 #import <CoreRE/RENetworkComponent.h>
+#import <CoreRE/RECALayerService.h>
+#import <CoreRE/RECAContext.h>

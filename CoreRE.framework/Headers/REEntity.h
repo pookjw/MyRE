@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <CoreRE/REDefines.h>
+#import <CoreRE/Defines.h>
 #import <CoreRE/REComponent.h>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -16,7 +16,7 @@ RE_EXTERN struct REComponent * REEntityAddComponentByClass(struct REEntity *enti
 RE_EXTERN void REEntityAddExistingComponent(struct REEntity *entity, struct REComponent *component);
 RE_EXTERN struct REComponent * _Nullable REEntityGetOrAddComponentByClass(struct REEntity *entity, struct REComponentClass *componentClass);
 RE_EXTERN void REEntityRemoveComponentByClass(struct REEntity *entity, struct REComponentClass *componentClass);
-RE_EXTERN bool REEntityIsAnchored(struct REEntity *entity);
+RE_EXTERN BOOL REEntityIsAnchored(struct REEntity *entity);
 RE_EXTERN struct REEntity * _Nullable REEntityGetParent(struct REEntity *);
 RE_EXTERN struct REEntity * REEntityCopy(struct REEntity *);
 RE_EXTERN void REEntityRemoveAllComponents(struct REEntity *);

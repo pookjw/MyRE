@@ -3,6 +3,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-RE_EXTERN void RECGColorToColorGamut(CGColorRef cgColor, struct REColorGamut4F *, unsigned int *);
+@interface CAContext : NSObject
+@property (retain, nullable) CALayer *layer;
+@end
 
 NS_ASSUME_NONNULL_END

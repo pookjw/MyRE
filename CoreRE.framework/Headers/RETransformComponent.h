@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <CoreRE/REDefines.h>
+#import <CoreRE/Defines.h>
 #include <simd/simd.h>
 
 NS_ASSUME_NONNULL_BEGIN

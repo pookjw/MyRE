@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */; };
 		4F82C0122E2BBA8300216AEA /* CoreRE.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F82C0112E2BBA8300216AEA /* CoreRE.framework */; };
 		4F82C0162E2BBAEA00216AEA /* MRUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F82C0152E2BBAEA00216AEA /* MRUIKit.framework */; };
 		4FBDBCA52E2E4E3700CDAF27 /* UIKitPrivate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBDBCA42E2E4E3700CDAF27 /* UIKitPrivate.framework */; };
@@ -14,6 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = QuartzCorePrivate.framework; sourceTree = "<group>"; };
 		4F82BFC22E2BB5ED00216AEA /* MyRE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyRE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F82C0112E2BBA8300216AEA /* CoreRE.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CoreRE.framework; sourceTree = "<group>"; };
 		4F82C0152E2BBAEA00216AEA /* MRUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MRUIKit.framework; sourceTree = "<group>"; };
@@ -48,6 +50,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FBDBCA92E2E4E4600CDAF27 /* UIKit.framework in Frameworks */,
+				4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */,
 				4F82C0162E2BBAEA00216AEA /* MRUIKit.framework in Frameworks */,
 				4FBDBCA52E2E4E3700CDAF27 /* UIKitPrivate.framework in Frameworks */,
 				4F82C0122E2BBA8300216AEA /* CoreRE.framework in Frameworks */,
@@ -77,6 +80,7 @@
 		4F82BFDF2E2BB7F800216AEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */,
 				4FBDBCA82E2E4E4600CDAF27 /* UIKit.framework */,
 				4FBDBCA42E2E4E3700CDAF27 /* UIKitPrivate.framework */,
 				4F82C0152E2BBAEA00216AEA /* MRUIKit.framework */,

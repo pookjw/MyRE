@@ -43,3 +43,5 @@ struct REColorGamut4F {
 };
 
 struct REScene {};
+
+struct RECALayerService {};
