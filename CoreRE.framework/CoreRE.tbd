@@ -86,7 +86,8 @@ exports:
     _RECALayerComponentSetUpdatesClippingPrimitive,
     _RECALayerClientComponentSetUpdatesClippingPrimitive,
     _RECAContextCreateDefaultOptions,
-    _RECALayerServiceGetOrCreateCAContext ]
+    _RECALayerServiceGetOrCreateCAContext,
+    _REComponentGetEntity ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...
