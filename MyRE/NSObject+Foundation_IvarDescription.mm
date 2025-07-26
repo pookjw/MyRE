@@ -600,7 +600,12 @@
             return [self _fd_decodedTypeFromEncodedType:splited];
         }
     } else {
-        return [NSString stringWithCString:encodedType encoding:NSUTF8StringEncoding];
+        NSString * _Nullable result = [NSString stringWithCString:encodedType encoding:NSUTF8StringEncoding];
+        if (result == nil) {
+            return @"(unknown)";
+        } else {
+            return result;
+        }
     }
 }
 

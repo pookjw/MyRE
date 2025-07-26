@@ -4,9 +4,12 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CAContext : NSObject
++ (NSArray<CAContext *> *)allContexts;
++ (CAContext *)remoteContextWithOptions:(NSDictionary<NSString *, id> * _Nullable)options;
 @property (retain, nullable) CALayer *layer;
 @property float level;
 @property unsigned int commitPriority;
+- (void)orderAbove:(unsigned int)order;
 @end
 
 NS_ASSUME_NONNULL_END

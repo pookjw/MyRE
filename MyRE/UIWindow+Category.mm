@@ -55,12 +55,42 @@ namespace mr_UIWindow {
             method_setImplementation(method, reinterpret_cast<IMP>(custom));
         }
     }
+
+namespace _configureRootLayer_sceneTransformLayer_transformLayer_ {
+void (*original)(UIWindow *self, SEL _cmd, CALayer *rootLayer, CALayer *sceneTransformLayer, CALayer *transformLayer);
+void custom(UIWindow *self, SEL _cmd, CALayer *rootLayer, CALayer *sceneTransformLayer, CALayer *transformLayer) {
+//    [transformLayer removeFromSuperlayer];
+    NSLog(@"%@", [rootLayer recursiveDescription]);
+    original(self, _cmd, rootLayer, sceneTransformLayer, transformLayer);
+    
+}
+void swizzle(void) {
+    Method method = class_getInstanceMethod([UIWindow class], sel_registerName("_configureRootLayer:sceneTransformLayer:transformLayer:"));
+    original = reinterpret_cast<decltype(original)>(method_getImplementation(method));
+    method_setImplementation(method, reinterpret_cast<IMP>(custom));
+}
+}
+
+namespace _transformLayerRotationsAreEnabled {
+BOOL (*original)(Class self, SEL _cmd);
+BOOL custom(Class self, SEL _cmd) {
+    return YES;
+}
+void swizzle() {
+    Method method = class_getClassMethod([UIWindow class], sel_registerName("_transformLayerRotationsAreEnabled"));
+    original = reinterpret_cast<decltype(original)>(method_getImplementation(method));
+    method_setImplementation(method, reinterpret_cast<IMP>(custom));
+}
+}
+
 }
 
 @implementation UIWindow (Category)
 
 + (void)load {
-    mr_UIWindow::_setupContextLayerComponent::swizzle();
+//    mr_UIWindow::_setupContextLayerComponent::swizzle();
+//    mr_UIWindow::_configureRootLayer_sceneTransformLayer_transformLayer_::swizzle();
+//    mr_UIWindow::_transformLayerRotationsAreEnabled::swizzle();
 }
 
 @end

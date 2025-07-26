@@ -13,5 +13,6 @@ RE_EXTERN void RECALayerComponentSetUpdatesMesh(struct REComponent *, BOOL);
 RE_EXTERN void RECALayerComponentSetUpdatesMaterial(struct REComponent *, BOOL);
 RE_EXTERN void RECALayerComponentSetUpdatesTexture(struct REComponent *, BOOL);
 RE_EXTERN void RECALayerComponentSetUpdatesClippingPrimitive(struct REComponent *, BOOL);
+RE_EXTERN CGSize RECALayerComponentGetLayerSize(struct REComponent *);
 
 NS_ASSUME_NONNULL_END

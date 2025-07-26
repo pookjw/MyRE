@@ -4,3 +4,4 @@
 #import <UIKitPrivate/_UIContextBinder.h>
 #import <UIKitPrivate/UIWindowScene+Private.h>
 #import <UIKitPrivate/UIScreen+Private.h>
+#import <UIKitPrivate/_UIRealityKitIntegration.h>

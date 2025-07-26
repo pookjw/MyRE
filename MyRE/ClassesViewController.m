@@ -8,6 +8,7 @@
 #import "ClassesViewController.h"
 #import "BasicViewController.h"
 #import "CALayerViewController.h"
+#import "LayerScenePresenterViewController.h"
 
 @interface ClassesViewController ()
 @property (class, nonatomic, readonly, getter=_classes) NSArray<Class> *classes;
@@ -19,6 +20,7 @@
 
 + (NSArray<Class> *)_classes {
     return @[
+        [LayerScenePresenterViewController class],
         [CALayerViewController class],
         [BasicViewController class]
     ];

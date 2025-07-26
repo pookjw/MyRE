@@ -230,7 +230,7 @@ namespace mr_UIView {
 @implementation UIView (Category)
 
 + (void)load {
-    mr_UIView::_requestSeparatedState_withReason_::swizzle();
+//    mr_UIView::_requestSeparatedState_withReason_::swizzle();
 }
 
 @end

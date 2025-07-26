@@ -23,5 +23,10 @@ RE_EXTERN void REEntityRemoveAllComponents(struct REEntity *);
 RE_EXTERN NSUInteger REEntityGetComponentCount(struct REEntity *);
 RE_EXTERN struct REComponent * REEntityGetComponentAtIndex(struct REEntity *, NSInteger);
 RE_EXTERN unsigned long REEntityGetChildren(struct REEntity *entity, struct REEntity * _Nonnull * _Nonnull children, unsigned long allocatedCount);
+RE_EXTERN struct REScene * _Nullable REEntityGetSceneNullable(struct REEntity *);
+RE_EXTERN void REEntityAddComponent(struct REEntity *entity, struct REComponentClass *);
+RE_EXTERN BOOL REIsEntityHidden(struct REEntity *entity);
+RE_EXTERN BOOL REEntityIsVisible(struct REEntity *entity);
+RE_EXTERN void REEntitySetParent(struct REEntity *entity, struct REEntity *parent);
 
 NS_ASSUME_NONNULL_END

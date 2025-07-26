@@ -26,3 +26,4 @@
 #import <CoreRE/RENetworkComponent.h>
 #import <CoreRE/RECALayerService.h>
 #import <CoreRE/RECAContext.h>
+#import <CoreRE/REUISortingComponent.h>

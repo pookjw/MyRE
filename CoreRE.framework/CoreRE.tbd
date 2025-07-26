@@ -87,7 +87,19 @@ exports:
     _RECALayerClientComponentSetUpdatesClippingPrimitive,
     _RECAContextCreateDefaultOptions,
     _RECALayerServiceGetOrCreateCAContext,
-    _REComponentGetEntity ]
+    _REComponentGetEntity,
+    _RESceneAddEntity,
+    _REEntityAddComponent,
+    _REIsEntityHidden,
+    _REEntityIsVisible,
+    _REEntitySetParent,
+    _RESceneGetAllEntitiesArray,
+    _RECALayerComponentGetLayerSize,
+    _RENetworkMarkComponentDirty,
+    _RENetworkMarkEntityMetadataDirty,
+    _REUISortingComponentGetComponentType,
+    _REUISortingComponentSetSortCategory,
+    _REUISortingComponentSetExtents ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

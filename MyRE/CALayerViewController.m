@@ -60,6 +60,8 @@
 //
 - (void)drawInContext:(CGContextRef)ctx {
     CGRect bounds = self.bounds;
+    NSLog(@"%@", NSStringFromCGRect(bounds));
+    NSLog(@"%@", ctx);
     CGContextSetFillColorWithColor(ctx, [UIColor systemBlueColor].CGColor);
     CGContextFillEllipseInRect(ctx, bounds);
 }
@@ -80,9 +82,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-        [self.view _requestSeparatedState:1 withReason:@"_UIViewSeparatedStateRequestReasonUnspecified"];
-        self.view.backgroundColor = [UIColor.systemBlueColor colorWithAlphaComponent:0.2];
-    self.view.layer.zPosition = 30.;
+//        [self.view _requestSeparatedState:1 withReason:@"_UIViewSeparatedStateRequestReasonUnspecified"];
+//        self.view.backgroundColor = [UIColor.systemBlueColor colorWithAlphaComponent:0.2];
+//    self.view.layer.zPosition = 30.;
 }
 
 - (void)viewDidMoveToWindow:(UIWindow *)window shouldAppearOrDisappear:(BOOL)shouldAppearOrDisappear {
@@ -90,23 +92,39 @@
     
     if (window) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            struct REEntity *entity = [self.view _reEntity];
+            
+            struct REEntity *entity = [window reEntity];
             NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive(entity));
             
             struct REEntity *subentity = REEntityCreate();
             MRUIApplyBaseConfigurationToNewEntity(subentity);
             REEntitySetName(subentity, "My Layer Entity");
-//            REEntityInsertChild(entity, subentity, 0);
+            REEntityInsertChild(entity, subentity, 0);
             
             struct RECALayerService *layerService = MRUIDefaultLayerService();
-            CAContext *boundContext = RECALayerServiceGetOrCreateCAContext(layerService);
-            NSLog(@"%p", [boundContext layer]);
+//            CAContext *boundContext = RECALayerServiceGetOrCreateCAContext(layerService);
+//            CAContext *boundContext = [CAContext allContexts][3];
+            
+            NSMutableDictionary *options = [(NSDictionary *)RECAContextCreateDefaultOptions(NULL) mutableCopy];
+            options[@"displayId"] = @1;
+            options[@"displayable"] = @0;
+            NSLog(@"%@", options);
+            NSLog(@"%@", [CAContext allContexts]);
+            CAContext *boundContext = [[CAContext remoteContextWithOptions:options] retain];
+            NSLog(@"%@", [CAContext allContexts]);
+            [options release];
+            assert(boundContext != nil);
+            [boundContext orderAbove:0];
             [boundContext setLevel:UIWindowLevelStatusBar];
             [boundContext setCommitPriority:1];
+            
             {
-               CAContext *boundContext = window._boundContext;
-                NSLog(@"%p", boundContext);
+                CALayer *layer = [[CALayer alloc] init];
+                boundContext.layer = layer;
+                [layer release];
+//                boundContext.layer = window.layer;
             }
+            
             // x19
             struct REComponent *caLayerComponent = RECALayerServiceCreateRootComponent(layerService, boundContext, subentity, NULL);
             assert(REComponentGetClass(caLayerComponent) == RECALayerClientComponentGetComponentType());
@@ -117,11 +135,13 @@
             RECALayerComponentSetShouldSyncToRemotes(caLayerComponent, YES);
             // x20
             CALayer *layer = RECALayerComponentGetCALayer(caLayerComponent);
-            layer.transform = window.layer.transform;
+            assert(layer != nil);
+//            layer.transform = window.layer.transform;
             layer.backgroundColor = UIColor.systemRedColor.CGColor;
-            //        layer.frame = CGRectMake(0., 0., 400., 400.);
+//                    layer.frame = CGRectMake(0., 0., 400., 400.);
+            layer.frame = window.bounds;
             //        layer.zPosition = 0;
-//            layer.separatedState = 1;
+            layer.separatedState = 1;
             RECALayerClientComponentSetUpdatesMesh(caLayerComponent, NO);
             RECALayerComponentSetUpdatesMaterial(caLayerComponent, NO);
             RECALayerComponentSetUpdatesTexture(caLayerComponent, NO);
@@ -130,17 +150,28 @@
             RECALayerClientComponentSetShouldSyncToRemotes(subentity, YES);
 //            RERelease(caLayerComponent);
             
+            
+//            id integration = ((id (*)(Class, SEL))objc_msgSend)(objc_lookUpClass("MRUIMixedRealityIntegration"), sel_registerName("sharedInstance"));
+//            id sharedSimulation = ((id (*)(id, SEL))objc_msgSend)(integration, sel_registerName("sharedSimulation"));
+//            NSError * _Nullable error = nil;
+//            BOOL result = ((BOOL (*)(id, SEL, id, id *))objc_msgSend)(sharedSimulation, sel_registerName("joinWithConnectionContext:error:"), boundContext, &error);
+//            assert(result);
+            
             MyLayer *myLayer = [[MyLayer alloc] init];
             myLayer.frame = layer.bounds;
             myLayer.backgroundColor = UIColor.systemRedColor.CGColor;
-//            myLayer.separatedState = 1;
+            myLayer.separatedState = 1;
             //        myLayer.zPosition = 10;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [layer setNeedsLayout];
+                [myLayer setNeedsLayout];
+                [layer setNeedsDisplay];
+                [myLayer setNeedsDisplay];
+            });
             [layer addSublayer:myLayer];
             [layer retain];
-            [layer setNeedsLayout];
-            [myLayer setNeedsLayout];
-            [layer setNeedsDisplay];
-            [myLayer setNeedsDisplay];
+            
+//            [CATransaction commit];
             
             assert(((BOOL (*)(id, SEL))objc_msgSend)(boundContext, sel_registerName("valid")));
             NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive(entity));

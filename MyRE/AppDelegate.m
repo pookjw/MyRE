@@ -7,6 +7,7 @@
 
 #import "AppDelegate.h"
 #import "SceneDelegate.h"
+#import "LayerSceneDelegate.h"
 
 @interface AppDelegate ()
 @end
@@ -18,8 +19,15 @@
 }
 
 - (UISceneConfiguration *)application:(UIApplication *)application configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession options:(UISceneConnectionOptions *)options {
+    NSString * _Nullable activityType = options.userActivities.allObjects.firstObject.activityType;
     UISceneConfiguration *configuration = [connectingSceneSession.configuration copy];
-    configuration.delegateClass = [SceneDelegate class];
+    
+    if ([activityType isEqualToString:@"LayerScene"]) {
+        configuration.delegateClass = [LayerSceneDelegate class];
+    } else {
+        configuration.delegateClass = [SceneDelegate class];
+    }
+    
     return [configuration autorelease];
 }
 
