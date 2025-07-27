@@ -99,7 +99,10 @@ exports:
     _RENetworkMarkEntityMetadataDirty,
     _REUISortingComponentGetComponentType,
     _REUISortingComponentSetSortCategory,
-    _REUISortingComponentSetExtents ]
+    _REUISortingComponentSetExtents,
+    _RECASetEnableCalculateTransformFromLayerData,
+    _RECALayerServiceSetCAContext,
+    _RECAContextEnablePCT ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

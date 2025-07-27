@@ -26,10 +26,34 @@ NSString * MR_REEntityGetComponentNames(struct REEntity *entity) {
 }
 
 NSString * MR_REEntityGetRichDebugDescription(struct REEntity *entity) {
-    NSString *description = REEntityGetDebugDescription(entity);
-    NSString *componentNames = MR_REEntityGetComponentNames(entity);
+    NSMutableString *string = [NSMutableString string];
     
-    return [NSString stringWithFormat:@"%@ (%@)", description, componentNames];
+    NSString *description = REEntityGetDebugDescription(entity);
+    [string appendString:description];
+    
+    NSUInteger count = REEntityGetComponentCount(entity);
+    if (count > 0) {
+        [string appendString:@" ("];
+        
+        for (NSInteger idx = 0; idx < count; idx++) {
+            struct REComponent *component = REEntityGetComponentAtIndex(entity, idx);
+            struct REComponentClass *componentClass = REComponentGetClass(component);
+            const char *name = REComponentClassGetName(componentClass);
+            [string appendFormat:@"%s", name];
+            
+            if (componentClass == RECALayerClientComponentGetComponentType()) {
+                [string appendFormat:@" (size: %@)", NSStringFromCGSize(RECALayerComponentGetLayerSize(component))];
+            }
+            
+            if (idx < (count - 1)) {
+                [string appendString:@", "];
+            }
+        }
+        
+            [string appendString:@") "];
+    }
+    
+    return string;
 }
 
 NSString * _MR_REEntityGetRichDebugDescriptionRecursiveWithIndent(struct REEntity *entity, NSUInteger indent) {

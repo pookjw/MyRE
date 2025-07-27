@@ -37,6 +37,10 @@
     
     NSLog(@"UIWindow : %@", MR_REEntityGetComponentNames([window reEntity]));
     NSLog(@"UIWindowScene : %@", MR_REEntityGetComponentNames([(UIWindowScene *)scene reRootEntity]));
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive([window.layer _careEntity]));
+    });
     [window release];
 }
 

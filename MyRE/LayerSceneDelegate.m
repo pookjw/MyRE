@@ -66,25 +66,25 @@
 }
 
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
-//    [_layer release];
-//    _layer = [[CustomLayer alloc] init];
+    [_layer release];
+    _layer = [[CustomLayer alloc] init];
     
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     [windowScene addObserver:self forKeyPath:@"effectiveGeometry" options:NSKeyValueObservingOptionNew context:NULL];
     
-//    {
-        UIWindow *window = [[UIWindow alloc] initWithWindowScene:windowScene];
-        [_layer release];
-        object_getInstanceVariable(window, "_layerRetained", &_layer);
-        [_layer retain];
-//        [[windowScene _contextBinder] attachBindable:window];
-    _layer.frame = CGRectMake(0., 0., 1280., 720.);
-        _layer.hidden = NO;
-        _layer.backgroundColor = UIColor.redColor.CGColor;
-    ((void (*)(id, SEL))objc_msgSend)(window, sel_registerName("_updateTransformLayer"));
-        [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
-            ((void (*)(id, SEL))objc_msgSend)(window, sel_registerName("_updateTransformLayer"));
-        }];
+////    {
+//        UIWindow *window = [[UIWindow alloc] initWithWindowScene:windowScene];
+//        [_layer release];
+//        object_getInstanceVariable(window, "_layerRetained", &_layer);
+//        [_layer retain];
+////        [[windowScene _contextBinder] attachBindable:window];
+//    _layer.frame = CGRectMake(0., 0., 1280., 720.);
+//        _layer.hidden = NO;
+//        _layer.backgroundColor = UIColor.redColor.CGColor;
+//    ((void (*)(id, SEL))objc_msgSend)(window, sel_registerName("_updateTransformLayer"));
+//        [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
+//            ((void (*)(id, SEL))objc_msgSend)(window, sel_registerName("_updateTransformLayer"));
+//        }];
 //        return;
 //    }
 //        [[windowScene _contextBinder] attachBindable:window];
@@ -108,6 +108,7 @@
     // substrate
     id contextBinder = [windowScene _contextBinder];
     id substrate = ((id (*)(id, SEL))objc_msgSend)(contextBinder, sel_registerName("substrate"));
+    struct RECALayerService *layerService = MRUIDefaultLayerService();
     CAContext *context = ((id (*)(Class, SEL, id, id))objc_msgSend)(objc_lookUpClass("_UIContextBinder"), sel_registerName("createContextForBindable:withSubstrate:"), self, substrate);
 //    struct RECALayerService *layerService = MRUIDefaultLayerService();
 //    CAContext *context = RECALayerServiceGetOrCreateCAContext(layerService);
@@ -129,7 +130,6 @@
 //    REEntitySetParent(contextEntity, [hostingScene reRootEntity]);
     
     
-    struct RECALayerService *layerService = MRUIDefaultLayerService();
     MRUIApplyBaseConfigurationToNewEntity(contextEntity);
     REEntitySetName(contextEntity, "CALayerEntity");
     
@@ -156,10 +156,10 @@
     id preferenceHost = ((id (*)(Class, SEL, struct REEntity *))objc_msgSend)(objc_lookUpClass("MRUIEntityPreferenceHost"), sel_registerName("preferenceHostForEntity:"), contextEntity);
     ((void (*)(id, SEL, id))objc_msgSend)(preferenceHost, sel_registerName("setDelegate:"), self);
     
-//    CALayer *layer = RECALayerComponentGetCALayer(caLayerComponent);
+    CALayer *layer = RECALayerComponentGetCALayer(caLayerComponent);
+    assert(layer == _layer);
 //    CALayer *layer = window.layer;
-    CALayer *layer;
-    object_getInstanceVariable(window, "_layerRetained", &layer);
+//    CALayer *layer = _la
     
     layer.transform = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.transform;
     layer.affineTransform = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.affineTransform;
@@ -176,6 +176,7 @@
 //    layer.rasterizationScale = 2.0;
     assert(layer != nil);
 //    assert(layer == _layer);
+    assert(((void * (*)(id, SEL))objc_msgSend)(layer, sel_registerName("_careScene")) != NULL);
     
     {
         id traitEnv = ((id (*)(Class, SEL, struct REEntity *))objc_msgSend)(objc_lookUpClass("MRUIEntityTraitEnvironment"), sel_registerName("traitEnvironmentForEntity:"), [layer _careEntity]);
@@ -188,9 +189,9 @@
     [CATransaction commit];
     [CATransaction flush];
     
-    NSLog(@"%@", NSStringFromCGSize(RECALayerComponentGetLayerSize(caLayerComponent)));
     NSLog(@"%@", [self.layer recursiveDescription]);
-//    assert(!CGSizeEqualToSize(CGSizeZero, RECALayerComponentGetLayerSize(caLayerComponent)));
+    
+    ((void (*)(id, SEL))objc_msgSend)(layer, sel_registerName("_careMarkEntityDirtyIfHasNetworkComponent"));
 //    {
 //        CustomLayer *sublayer = [[CustomLayer alloc] init];
 //        sublayer.opacity = 1.f;

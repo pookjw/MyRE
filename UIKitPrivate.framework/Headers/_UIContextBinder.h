@@ -6,15 +6,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 struct __attribute__((aligned(32))) UIContextBindingDescription {
     id displayIdentity;
-    BOOL unknown:1;
-    BOOL ignoresHitTest:1;
-    BOOL shouldCreateContextAsSecure:1;
-    BOOL shouldUseRemoteContext:1;
-    BOOL alwaysGetsContexts:1;
-    BOOL isWindowServerHostingManaged:1;
-    BOOL keepContextInBackground:1;
-    BOOL allowsOcclusionDetectionOverride:1;
-    BOOL wantsSuperlayerSecurityAnalysis:1;
+    BOOL unknown;
+    BOOL ignoresHitTest;
+    BOOL shouldCreateContextAsSecure;
+    BOOL shouldUseRemoteContext;
+    BOOL alwaysGetsContexts;
+    BOOL isWindowServerHostingManaged;
+    BOOL keepContextInBackground;
+    BOOL allowsOcclusionDetectionOverride;
+    BOOL wantsSuperlayerSecurityAnalysis;
 };
 
 @protocol _UIContextBindable <NSObject>
