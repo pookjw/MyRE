@@ -13,22 +13,25 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 
-@interface CustomLayer : CALayer
-@end
-@implementation CustomLayer
-- (void)layoutSublayers {
-    [super layoutSublayers];
-    NSLog(@"%@", NSStringFromCGRect(self.bounds));
-}
-- (void)drawInContext:(CGContextRef)ctx {
-    [super drawInContext:ctx];
-    NSLog(@"%@", NSStringFromCGRect(self.bounds));
-}
-@end
+/*
+ -_configureRootLayer:sceneTransformLayer:transformLayer:
+ 
+ -rootLayer (-attachLayer:, context)
+ -sceneTransformLayer
+ -transformLayer
+ -layer
+ 
+ MRUIWindowIntegration
+ MRUIWindowSceneIntegration
+ */
 
 
 @interface LayerSceneDelegate () <_UIContextBindable>
-@property (retain, nonatomic, nullable) __kindof CALayer *layer;
+@property (retain, nonatomic, nullable) CALayer *layer;
+//@property (retain, nonatomic, nullable) CALayer *rootLayer;
+//@property (retain, nonatomic, nullable) CALayer *rootLayer;
+//@property (retain, nonatomic, nullable) CALayer *rootLayer;
+
 @property (retain, nonatomic, nullable) CAContext *context;
 @end
 
@@ -55,6 +58,38 @@
             RENetworkMarkEntityMetadataDirty(component);
         }
         
+        {
+            UIWindow *keyWindow = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow"));
+            CALayer *layer = self.layer;
+            layer.position = layer.position;
+            layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(object, sel_registerName("bounds"));
+            
+            NSNumber *separatedId = [layer valueForKeyPath:@"separatedOptions.separatedId"];
+            [layer setValue:[keyWindow.layer valueForKey:@"separatedOptions"] forKey:@"separatedOptions"];
+            [layer setValue:separatedId forKeyPath:@"separatedOptions.separatedId"];
+            [layer setValue:@{
+                @"clippingPrimitive": @YES,
+                @"collider": @YES,
+                @"material": @YES,
+                @"materialParameters": @YES,
+                @"mesh": @YES,
+                @"texture": @YES,
+                @"transform": @YES
+            } forKeyPath:@"separatedOptions.updates"];
+            
+            [layer setNeedsLayout];
+            [CATransaction flush];
+            struct RETransformService *transformService = RETransformServiceFromEntity([layer _careEntity]);
+            RETransformServiceGetWorldMatrix4x4F(transformService, [layer _careEntity]);
+            RETransformServiceGetParentWorldMatrix4x4F(transformService, [layer _careEntity]);
+            
+            {
+                struct REComponent *layerGeometry = REEntityGetOrAddComponentByClass([layer _careEntity], REUILayerGeometryComponentGetComponentType());
+                REUILayerGeometryComponentSetWidth(layerGeometry, layer.bounds.size.width);
+                REUILayerGeometryComponentSetHeight(layerGeometry, layer.bounds.size.width);
+            }
+        }
+        
 //        {
 //            struct REComponent *component = REEntityGetOrAddComponentByClass([_layer _careEntity], REUISortingComponentGetComponentType());
 //            REUISortingComponentSetSortCategory(component, YES);
@@ -67,7 +102,7 @@
 
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
     [_layer release];
-    _layer = [[CustomLayer alloc] init];
+    _layer = [[CALayer alloc] init];
     
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     [windowScene addObserver:self forKeyPath:@"effectiveGeometry" options:NSKeyValueObservingOptionNew context:NULL];
@@ -158,17 +193,61 @@
     
     CALayer *layer = RECALayerComponentGetCALayer(caLayerComponent);
     assert(layer == _layer);
-//    CALayer *layer = window.layer;
-//    CALayer *layer = _la
     
-    layer.transform = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.transform;
-    layer.affineTransform = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.affineTransform;
-    layer.position = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.position;
-    layer.bounds = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.bounds;
-    layer.frame = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.frame;
-    layer.zPosition = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.zPosition;
-    layer.bounds = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow")).layer.bounds;
-    NSLog(@"%@", NSStringFromCGRect(layer.bounds));
+    REEntityAddComponentByClass([layer _careEntity], REAudioPlayerComponentGetComponentType());
+    
+    //    CALayer *layer = window.layer;
+    //    CALayer *layer = _la
+    
+    UIWindow *keyWindow = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow"));
+    layer.transform = keyWindow.layer.transform;
+    layer.affineTransform = keyWindow.layer.affineTransform;
+    layer.position = keyWindow.layer.position;
+    layer.zPosition = keyWindow.layer.zPosition;
+    layer.anchorPointZ = keyWindow.layer.anchorPointZ;
+    layer.anchorPoint = keyWindow.layer.anchorPoint;
+    layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(windowScene, sel_registerName("bounds"));
+    [layer setValue:nil forKeyPath:@"separatedOptions.pointsPerMeter"];
+    
+    {
+        CALayer *sublayer = [[CALayer alloc] init];
+        [layer addSublayer:sublayer];
+        sublayer.frame = CGRectMake(0., 0., 1280, 720);
+        sublayer.backgroundColor = UIColor.greenColor.CGColor;
+        [sublayer release];
+    }
+    
+//    [layer setValue:@{
+//        @"backBevel" : @0,
+//        @"flatDepth" : @0,
+//        @"frontBevel" : @0.01
+//    } forKeyPath:@"separatedOptions.geometry"];
+//    [layer setValue:@0.01 forKeyPath:@"separatedOptions.separatedThickness"];
+//    [layer setValue:@1 forKeyPath:@"separatedOptions.zAnchor"];
+//    [layer setValue:@{
+//        @"enabled": @YES,
+//        @"fakeFresnelMaxDist": @"0.004",
+//        @"fakeFresnelStrength": @"0.06",
+//        @"fillSpecularExponent": @12,
+//        @"fillSpecularStrength": @"0.3",
+//        @"frontDepthForNormals": @"1.25",
+//        @"mainSpecularExponent": @15,
+//        @"mainSpecularStrength": @"0.4"
+//    } forKeyPath:@"separatedOptions.platter"];
+//    [layer setValue:@0 forKeyPath:@"thicknessAnchor"];
+    NSNumber *separatedId = [layer valueForKeyPath:@"separatedOptions.separatedId"];
+    [layer setValue:[keyWindow.layer valueForKey:@"separatedOptions"] forKey:@"separatedOptions"];
+    [layer setValue:separatedId forKeyPath:@"separatedOptions.separatedId"];
+    [layer setValue:@{
+        @"clippingPrimitive": @YES,
+        @"collider": @YES,
+        @"material": @YES,
+        @"materialParameters": @YES,
+        @"mesh": @YES,
+        @"texture": @YES,
+        @"transform": @YES
+    } forKeyPath:@"separatedOptions.updates"];
+    
     layer.opacity = 1.f;
     layer.hidden = NO;
     layer.separatedState = 1;
@@ -177,6 +256,12 @@
     assert(layer != nil);
 //    assert(layer == _layer);
     assert(((void * (*)(id, SEL))objc_msgSend)(layer, sel_registerName("_careScene")) != NULL);
+    
+    {
+        struct REComponent *layerGeometry = REEntityGetOrAddComponentByClass([layer _careEntity], REUILayerGeometryComponentGetComponentType());
+        REUILayerGeometryComponentSetWidth(layerGeometry, layer.bounds.size.width);
+        REUILayerGeometryComponentSetHeight(layerGeometry, layer.bounds.size.width);
+    }
     
     {
         id traitEnv = ((id (*)(Class, SEL, struct REEntity *))objc_msgSend)(objc_lookUpClass("MRUIEntityTraitEnvironment"), sel_registerName("traitEnvironmentForEntity:"), [layer _careEntity]);
@@ -330,3 +415,63 @@
 }
 
 @end
+
+/*
+ (lldb) po $x0
+ {
+     geometry =     {
+         backBevel = 0;
+         flatDepth = 0;
+         frontBevel = "0.01";
+     };
+     platter =     {
+         enabled = 1;
+         fakeFresnelMaxDist = "0.004";
+         fakeFresnelStrength = "0.06";
+         fillSpecularExponent = 12;
+         fillSpecularStrength = "0.3";
+         frontDepthForNormals = "1.25";
+         mainSpecularExponent = 15;
+         mainSpecularStrength = "0.4";
+     };
+     pointsPerMeter = 1360;
+     separatedId = 13961374189244558519;
+     separatedThickness = "0.01";
+     updates =     {
+         clippingPrimitive = 0;
+         material = 0;
+         materialParameters = 0;
+         mesh = 0;
+         texture = 0;
+         transform = 1;
+     };
+     zAnchor = 1;
+ }
+ 
+ {
+     geometry =     {
+         backBevel = 0;
+         flatDepth = 0;
+         frontBevel = "0.01";
+     };
+     minorRadius = "0.005";
+     platter =     {
+         enabled = 1;
+         fakeFresnelMaxDist = "0.004";
+         fakeFresnelStrength = "0.06";
+         fillSpecularExponent = 12;
+         fillSpecularStrength = "0.3";
+         frontDepthForNormals = "1.25";
+         mainSpecularExponent = 15;
+         mainSpecularStrength = "0.4";
+     };
+     separatedId = 15718407061596412473;
+     separatedInputID = 1;
+     separatedThickness = "0.01";
+     thicknessAnchor = 0;
+     updates =     {
+         collider = 0;
+     };
+     zAnchor = 1;
+ }
+ */

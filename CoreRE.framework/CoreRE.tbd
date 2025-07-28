@@ -102,7 +102,14 @@ exports:
     _REUISortingComponentSetExtents,
     _RECASetEnableCalculateTransformFromLayerData,
     _RECALayerServiceSetCAContext,
-    _RECAContextEnablePCT ]
+    _RECAContextEnablePCT,
+    _RETransformServiceFromEntity,
+    _RETransformServiceGetWorldMatrix4x4F,
+    _RETransformServiceGetParentWorldMatrix4x4F,
+    _REAudioPlayerComponentGetComponentType,
+    _REUILayerGeometryComponentGetComponentType,
+    _REUILayerGeometryComponentSetWidth,
+    _REUILayerGeometryComponentSetHeight ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

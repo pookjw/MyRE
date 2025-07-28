@@ -13,6 +13,7 @@
 #import "ClassesViewController.h"
 #import <MRUIKit/MRUIKit.h>
 #import "Utils.h"
+#include <objc/runtime.h>
 
 @interface SceneDelegate ()
 
@@ -39,7 +40,10 @@
     NSLog(@"UIWindowScene : %@", MR_REEntityGetComponentNames([(UIWindowScene *)scene reRootEntity]));
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive([window.layer _careEntity]));
+        CALayer *rootLayer;
+        object_getInstanceVariable(window, "_rootLayer", &rootLayer);
+        NSLog(@"%@", MRUIEntityViewLayerRecursiveDescription([rootLayer _careEntity], window, window.layer, @"-", 0, YES));
+        NSLog(@"%@", MR_REEntityGetRichDebugDescriptionRecursive([rootLayer _careEntity]));
     });
     [window release];
 }

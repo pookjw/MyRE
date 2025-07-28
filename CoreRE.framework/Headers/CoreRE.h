@@ -27,3 +27,6 @@
 #import <CoreRE/RECALayerService.h>
 #import <CoreRE/RECAContext.h>
 #import <CoreRE/REUISortingComponent.h>
+#import <CoreRE/RETransformService.h>
+#import <CoreRE/REAudioPlayerComponent.h>
+#import <CoreRE/REUILayerGeometryComponent.h>

@@ -59,10 +59,14 @@ namespace mr_UIWindow {
 namespace _configureRootLayer_sceneTransformLayer_transformLayer_ {
 void (*original)(UIWindow *self, SEL _cmd, CALayer *rootLayer, CALayer *sceneTransformLayer, CALayer *transformLayer);
 void custom(UIWindow *self, SEL _cmd, CALayer *rootLayer, CALayer *sceneTransformLayer, CALayer *transformLayer) {
-//    [transformLayer removeFromSuperlayer];
-    NSLog(@"%@", [rootLayer recursiveDescription]);
     original(self, _cmd, rootLayer, sceneTransformLayer, transformLayer);
-    
+//    
+//    if ([self _contextEntity] != NULL) {
+//        struct REComponent *caLayerComponent = REEntityGetComponentByClass([self _contextEntity], RECALayerClientComponentGetComponentType());
+//        CALayer *contextLayer = RECALayerComponentGetCALayer(caLayerComponent);
+//        
+//        NSLog(@"%@ %@ %@ %@ %@ %@", self, contextLayer, self.layer, rootLayer, sceneTransformLayer, transformLayer);
+//    }
 }
 void swizzle(void) {
     Method method = class_getInstanceMethod([UIWindow class], sel_registerName("_configureRootLayer:sceneTransformLayer:transformLayer:"));
@@ -89,8 +93,13 @@ void swizzle() {
 
 + (void)load {
 //    mr_UIWindow::_setupContextLayerComponent::swizzle();
-//    mr_UIWindow::_configureRootLayer_sceneTransformLayer_transformLayer_::swizzle();
+    mr_UIWindow::_configureRootLayer_sceneTransformLayer_transformLayer_::swizzle();
 //    mr_UIWindow::_transformLayerRotationsAreEnabled::swizzle();
 }
 
 @end
+
+/*
+ contextLayer
+ 
+ */
