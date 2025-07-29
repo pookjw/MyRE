@@ -26,7 +26,7 @@
  */
 
 
-@interface LayerSceneDelegate () <_UIContextBindable>
+@interface LayerSceneDelegate () <_UIContextBindable, CALayerDelegate>
 @property (retain, nonatomic, nullable) CALayer *layer;
 //@property (retain, nonatomic, nullable) CALayer *rootLayer;
 //@property (retain, nonatomic, nullable) CALayer *rootLayer;
@@ -60,14 +60,16 @@
         
         {
             UIWindow *keyWindow = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow"));
-            CALayer *layer = self.layer;
-            layer.position = layer.position;
-            layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(object, sel_registerName("bounds"));
+            CALayer *windowLayer;
+            object_getInstanceVariable(keyWindow, "_rootLayer", &windowLayer);
+            _layer.position = windowLayer.position;
+            _layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(object, sel_registerName("bounds"));
+            _layer.contentsRect = windowLayer.bounds;
             
-            NSNumber *separatedId = [layer valueForKeyPath:@"separatedOptions.separatedId"];
-            [layer setValue:[keyWindow.layer valueForKey:@"separatedOptions"] forKey:@"separatedOptions"];
-            [layer setValue:separatedId forKeyPath:@"separatedOptions.separatedId"];
-            [layer setValue:@{
+//            NSNumber *separatedId = [layer valueForKeyPath:@"separatedOptions.separatedId"];
+//            [layer setValue:[keyWindow.layer valueForKey:@"separatedOptions"] forKey:@"separatedOptions"];
+//            [layer setValue:separatedId forKeyPath:@"separatedOptions.separatedId"];
+            [_layer setValue:@{
                 @"clippingPrimitive": @YES,
                 @"collider": @YES,
                 @"material": @YES,
@@ -76,17 +78,21 @@
                 @"texture": @YES,
                 @"transform": @YES
             } forKeyPath:@"separatedOptions.updates"];
+            [_layer setValue:nil forKeyPath:@"separatedOptions.pointsPerMeter"];
+            [_layer setValue:@YES forKeyPath:@"separatedOptions.enableContext"];
+            assert([_layer context] != nil);
+//            [layer setValue:@YES forKey:@"enableContext"];
             
-            [layer setNeedsLayout];
+            [_layer setNeedsLayout];
             [CATransaction flush];
-            struct RETransformService *transformService = RETransformServiceFromEntity([layer _careEntity]);
-            RETransformServiceGetWorldMatrix4x4F(transformService, [layer _careEntity]);
-            RETransformServiceGetParentWorldMatrix4x4F(transformService, [layer _careEntity]);
+            struct RETransformService *transformService = RETransformServiceFromEntity([_layer _careEntity]);
+            RETransformServiceGetWorldMatrix4x4F(transformService, [_layer _careEntity]);
+            RETransformServiceGetParentWorldMatrix4x4F(transformService, [_layer _careEntity]);
             
             {
-                struct REComponent *layerGeometry = REEntityGetOrAddComponentByClass([layer _careEntity], REUILayerGeometryComponentGetComponentType());
-                REUILayerGeometryComponentSetWidth(layerGeometry, layer.bounds.size.width);
-                REUILayerGeometryComponentSetHeight(layerGeometry, layer.bounds.size.width);
+                struct REComponent *layerGeometry = REEntityGetOrAddComponentByClass([_layer _careEntity], REUILayerGeometryComponentGetComponentType());
+                REUILayerGeometryComponentSetWidth(layerGeometry, _layer.bounds.size.width);
+                REUILayerGeometryComponentSetHeight(layerGeometry, _layer.bounds.size.width);
             }
         }
         
@@ -103,39 +109,23 @@
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
     [_layer release];
     _layer = [[CALayer alloc] init];
+    _layer.delegate = self;
     
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     [windowScene addObserver:self forKeyPath:@"effectiveGeometry" options:NSKeyValueObservingOptionNew context:NULL];
     
-////    {
+//    {
 //        UIWindow *window = [[UIWindow alloc] initWithWindowScene:windowScene];
+//        [window makeKeyAndVisible];
 //        [_layer release];
-//        object_getInstanceVariable(window, "_layerRetained", &_layer);
+//        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:window.layer requiringSecureCoding:YES error:NULL];
+//        assert(data != nil);
+//        [window release];
+//        _layer = [NSKeyedUnarchiver unarchivedObjectOfClass:[CALayer class] fromData:data error:NULL];
 //        [_layer retain];
-////        [[windowScene _contextBinder] attachBindable:window];
-//    _layer.frame = CGRectMake(0., 0., 1280., 720.);
-//        _layer.hidden = NO;
-//        _layer.backgroundColor = UIColor.redColor.CGColor;
-//    ((void (*)(id, SEL))objc_msgSend)(window, sel_registerName("_updateTransformLayer"));
-//        [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer * _Nonnull timer) {
-//            ((void (*)(id, SEL))objc_msgSend)(window, sel_registerName("_updateTransformLayer"));
-//        }];
-//        return;
+//        assert(_layer != nil);
 //    }
-//        [[windowScene _contextBinder] attachBindable:window];
-//        window.backgroundColor = [UIColor.redColor colorWithAlphaComponent:0.1];
-////        [view _requestSeparatedState:1 withReason:@"_UIViewSeparatedStateRequestReasonUnspecified"];
-////        view.layer.separatedState = 1;
-////        assert([window.layer _careEntity] != NULL);
-//        window.layer.hidden = NO;
-//        window.layer.opacity = 1.f;
-////        [window release];
-////        REEntityInsertChild([layer _careEntity], [window.layer _careEntity], 0);
-////        [window release];
-////        NSLog(@"%d", (*(uint32_t *)((uintptr_t)[window.layer _careEntity] + 0x131) >> 2) & 1); // 1
-////        *(uint32_t *)((uintptr_t)[window.layer _careEntity] + 0x131) &= ~0b100;
-////        NSLog(@"%d", (*(uint32_t *)((uintptr_t)[window.layer _careEntity] + 0x131) >> 2) & 1); // 1
-//    }
+    
 //    UIWindow *window = [[UIWindow alloc] initWithWindowScene:windowScene];
 //    [[windowScene _contextBinder] attachBindable:window];
 //    NSLog(@"%p", [window reEntity]);
@@ -200,22 +190,53 @@
     //    CALayer *layer = _la
     
     UIWindow *keyWindow = ((UIWindow * (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow"));
-    layer.transform = keyWindow.layer.transform;
-    layer.affineTransform = keyWindow.layer.affineTransform;
-    layer.position = keyWindow.layer.position;
-    layer.zPosition = keyWindow.layer.zPosition;
-    layer.anchorPointZ = keyWindow.layer.anchorPointZ;
-    layer.anchorPoint = keyWindow.layer.anchorPoint;
+    CALayer *windowLayer;
+    object_getInstanceVariable(keyWindow, "_rootLayer", &windowLayer);
+    windowLayer = keyWindow.layer;
+    assert(windowLayer != nil);
+    layer.transform = windowLayer.transform;
+    layer.affineTransform = windowLayer.affineTransform;
+    layer.position = windowLayer.position;
+    layer.zPosition = windowLayer.zPosition;
+    layer.anchorPointZ = windowLayer.anchorPointZ;
+    layer.anchorPoint = windowLayer.anchorPoint;
     layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(windowScene, sel_registerName("bounds"));
-    [layer setValue:nil forKeyPath:@"separatedOptions.pointsPerMeter"];
-    
+//    layer.contentsRect = layer.bounds;
+    layer.masksToBounds = NO;
+    assert([layer valueForKey:@"separatedOptions"] != nil);
+//    [layer setValue:nil forKeyPath:@"separatedOptions.pointsPerMeter"];
+//    [layer setValue:@YES forKeyPath:@"separatedOptions.enableContext"];
+//    layer.contentsRect = layer.bounds;
     {
         CALayer *sublayer = [[CALayer alloc] init];
+        [sublayer setValue:@1360 forKeyPath:@"separatedOptions.pointsPerMeter"];
         [layer addSublayer:sublayer];
-        sublayer.frame = CGRectMake(0., 0., 1280, 720);
+        sublayer.separatedState = 1;
+//        REEntityInsertChild([layer _careEntity], [sublayer _careEntity], 0);
+        
+        sublayer.frame = layer.bounds;
+//        sublayer.contentsRect = sublayer.frame;
         sublayer.backgroundColor = UIColor.greenColor.CGColor;
+        sublayer.masksToBounds = NO;
+        
+        CALayer *windowLayer = keyWindow.layer;
+        sublayer.transform = windowLayer.transform;
+        sublayer.affineTransform = windowLayer.affineTransform;
+        sublayer.position = windowLayer.position;
+        sublayer.zPosition = windowLayer.zPosition;
+        sublayer.anchorPointZ = windowLayer.anchorPointZ;
+        sublayer.anchorPoint = windowLayer.anchorPoint;
+        
         [sublayer release];
     }
+    
+//    [layer setValue:@(1360) forKeyPath:@"separatedOptions.pointsPerMeter"];
+//    [layer setValue:@(NO) forKeyPath:@"separatedOptions.clipsToBounds"];
+//    [layer setValue:@(CGRectMake(0., 0., 1280, 720)) forKeyPath:@"separatedOptions.clippingExtents.min"];
+//    [layer setValue:@(CGRectMake(0., 0., 1280, 720)) forKeyPath:@"separatedOptions.clippingExtents.max"];
+//    assert([layer valueForKeyPath:@"separatedOptions.clippingExtents.min"] != nil);
+    
+    layer.masksToBounds = NO;
     
 //    [layer setValue:@{
 //        @"backBevel" : @0,
@@ -235,23 +256,25 @@
 //        @"mainSpecularStrength": @"0.4"
 //    } forKeyPath:@"separatedOptions.platter"];
 //    [layer setValue:@0 forKeyPath:@"thicknessAnchor"];
-    NSNumber *separatedId = [layer valueForKeyPath:@"separatedOptions.separatedId"];
-    [layer setValue:[keyWindow.layer valueForKey:@"separatedOptions"] forKey:@"separatedOptions"];
-    [layer setValue:separatedId forKeyPath:@"separatedOptions.separatedId"];
-    [layer setValue:@{
-        @"clippingPrimitive": @YES,
-        @"collider": @YES,
-        @"material": @YES,
-        @"materialParameters": @YES,
-        @"mesh": @YES,
-        @"texture": @YES,
-        @"transform": @YES
-    } forKeyPath:@"separatedOptions.updates"];
+//    NSNumber *separatedId = [layer valueForKeyPath:@"separatedOptions.separatedId"];
+//    [layer setValue:[keyWindow.layer valueForKey:@"separatedOptions"] forKey:@"separatedOptions"];
+//    [layer setValue:separatedId forKeyPath:@"separatedOptions.separatedId"];
+//    [layer setValue:@{
+//        @"clippingPrimitive": @YES,
+//        @"collider": @YES,
+//        @"material": @YES,
+//        @"materialParameters": @YES,
+//        @"mesh": @YES,
+//        @"texture": @YES,
+//        @"transform": @YES
+//    } forKeyPath:@"separatedOptions.updates"];
     
     layer.opacity = 1.f;
     layer.hidden = NO;
-    layer.separatedState = 1;
+    NSLog(@"%ld", layer.separatedState);
+//    layer.separatedState = 1;
     layer.backgroundColor = UIColor.systemRedColor.CGColor;
+//    layer.contents = (id)[UIImage systemImageNamed:@"xmark"].CGImage;
 //    layer.rasterizationScale = 2.0;
     assert(layer != nil);
 //    assert(layer == _layer);
@@ -377,6 +400,26 @@
 //    [self.layer setNeedsLayout];
 //    [CATransaction commit];
 //    [CATransaction flush];
+}
+
+- (void)displayLayer:(CALayer *)layer {
+    
+}
+
+- (void)drawLayer:(CALayer *)layer inContext:(CGContextRef)ctx {
+    
+}
+
+- (void)layerWillDraw:(CALayer *)layer {
+    
+}
+
+- (void)layoutSublayersOfLayer:(CALayer *)layer {
+    
+}
+
+- (id<CAAction>)actionForLayer:(CALayer *)layer forKey:(NSString *)event {
+    return nil;
 }
 
 @synthesize _boundContext;
