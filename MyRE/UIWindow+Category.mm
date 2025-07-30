@@ -38,7 +38,6 @@ void custom(UIWindow *self, SEL _cmd) {
         RECALayerComponentSetShouldSyncToRemotes(caLayerComponent, YES);
         // x20
         CALayer *layer = RECALayerComponentGetCALayer(caLayerComponent);
-        layer.backgroundColor = UIColor.redColor.CGColor;
         layer.separatedState = 1;
         RECALayerClientComponentSetUpdatesMesh(caLayerComponent, NO);
         RECALayerComponentSetUpdatesMaterial(caLayerComponent, NO);
