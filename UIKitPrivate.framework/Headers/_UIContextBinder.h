@@ -22,7 +22,7 @@ struct __attribute__((aligned(32))) UIContextBindingDescription {
 @property (weak, nonatomic, setter=_setBoundContext:) CAContext *_boundContext;
 @property (weak, nonatomic, setter=_setContextBinder:) _UIContextBinder *_contextBinder;
 - (CGFloat)_bindableLevel;
-- (CALayer *)_bindingLayer;
+- (CALayer * _Nullable)_bindingLayer;
 - (BOOL)_isVisible;
 @end
 

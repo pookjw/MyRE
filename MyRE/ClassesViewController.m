@@ -50,8 +50,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    Class _class = ClassesViewController.classes.firstObject;
-//    Class _class = [BasicViewController class];
+//    Class _class = ClassesViewController.classes.firstObject;
+    Class _class = [CALayerViewController class];
     __kindof UIViewController *viewController = [[_class alloc] init];
     [self.navigationController pushViewController:viewController animated:YES];
     [viewController release];

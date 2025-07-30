@@ -9,13 +9,14 @@
 #import <CoreRE/CoreRE.h>
 #import <MRUIKit/MRUIKit.h>
 #import <UIKitPrivate/UIKitPrivate.h>
+#import <QuartzCorePrivate/QuartzCorePrivate.h>
+#import <FrontBoardServices/FrontBoardServices.h>
 #import "Utils.h"
 #include <objc/message.h>
 #include <objc/runtime.h>
 
 @interface LayerSceneDelegate () <_UIContextBindable, MRUIRealityKitSimulationEventSourceObserver, MRUIEntityPreferenceHostDelegate, MRUIEntityTraitDelegate>
 @property (retain, nonatomic, nullable) CALayer *layer;
-@property (retain, nonatomic, nullable) CAContext *context;
 @property (weak, nonatomic, nullable) UIWindowScene *windowScene;
 @property (retain, nonatomic, nullable) MRUIEntityPreferenceHost *entityPreferenceHost;
 @property (retain, nonatomic, nullable) MRUIEntityTraitEnvironment *traitEnvironment;
@@ -65,8 +66,6 @@
     
     [context orderAbove:0];
     context.commitPriority = 100;
-    [_context release];
-    _context = [context retain];
     [substrate attachContext:context];
     assert(context != nil);
     
@@ -220,6 +219,7 @@
     
     return description;
 }
+
 - (NSDictionary *)_contextOptionsWithInitialOptions:(NSDictionary *)options {
     NSMutableDictionary *result = [options mutableCopy];
     

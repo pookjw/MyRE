@@ -109,7 +109,8 @@ exports:
     _REAudioPlayerComponentGetComponentType,
     _REUILayerGeometryComponentGetComponentType,
     _REUILayerGeometryComponentSetWidth,
-    _REUILayerGeometryComponentSetHeight ]
+    _REUILayerGeometryComponentSetHeight,
+    _REEntityRemoveFromSceneOrParent ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...
