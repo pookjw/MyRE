@@ -7,7 +7,14 @@ exports:
   - targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
     symbols:              [ _MRUIDefaultLayerService,
     _MRUIApplyBaseConfigurationToNewEntity,
-    _MRUIEntityViewLayerRecursiveDescription ]
+    _MRUIEntityViewLayerRecursiveDescription,
+    _OBJC_CLASS_$_MRUIRealityKitSimulationEventSource,
+    _OBJC_CLASS_$_MRUIEntityEvent,
+    __OBJC_PROTOCOL_$_MRUIRealityKitSimulationEventSourceObserver,
+    _OBJC_CLASS_$_MRUIEntityPreferenceHost,
+    __OBJC_PROTOCOL_$_MRUIEntityPreferenceHostDelegate,
+    _OBJC_CLASS_$_MRUIEntityTraitEnvironment,
+    __OBJC_PROTOCOL_$_MRUIEntityTraitDelegate ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

@@ -5,3 +5,6 @@
 #import <UIKitPrivate/UIWindowScene+Private.h>
 #import <UIKitPrivate/UIScreen+Private.h>
 #import <UIKitPrivate/_UIRealityKitIntegration.h>
+#import <UIKitPrivate/_UIContextBinderSubstrate.h>
+#import <UIKitPrivate/_UIFBSSceneSubstrate.h>
+#import <UIKitPrivate/UIScene+Private.h>

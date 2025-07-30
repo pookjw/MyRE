@@ -13,22 +13,20 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 
-@interface LayerSceneDelegate () <_UIContextBindable, CALayerDelegate>
+@interface LayerSceneDelegate () <_UIContextBindable, MRUIRealityKitSimulationEventSourceObserver, MRUIEntityPreferenceHostDelegate, MRUIEntityTraitDelegate>
 @property (retain, nonatomic, nullable) CALayer *layer;
 @property (retain, nonatomic, nullable) CAContext *context;
 @property (weak, nonatomic, nullable) UIWindowScene *windowScene;
+@property (retain, nonatomic, nullable) MRUIEntityPreferenceHost *entityPreferenceHost;
+@property (retain, nonatomic, nullable) MRUIEntityTraitEnvironment *traitEnvironment;
 @end
 
 @implementation LayerSceneDelegate
-
-+ (void)load {
-    Protocol *MRUIEntityTraitDelegate = NSProtocolFromString(@"MRUIEntityTraitDelegate");
-    if (MRUIEntityTraitDelegate) {
-        assert(class_addProtocol(self, MRUIEntityTraitDelegate));
-    }
-}
+@synthesize _boundContext;
+@synthesize _contextBinder;
 
 - (void)dealloc {
+    [[MRUIRealityKitSimulationEventSource sharedInstance] removeObserver:self];
     [_window release];
     
     UIWindowScene *windowScene = _windowScene;
@@ -40,7 +38,7 @@
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if ([keyPath isEqualToString:@"effectiveGeometry"]) {
-        _layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(object, sel_registerName("bounds"));
+        _layer.frame = ((UIWindowScene *)object).bounds;
         [_layer setValue:@{
             @"transform": @YES
         } forKeyPath:@"separatedOptions.updates"];
@@ -52,7 +50,6 @@
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
     [_layer release];
     _layer = [[CALayer alloc] init];
-    _layer.delegate = self;
     
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     if (self.windowScene != nil) {
@@ -61,21 +58,21 @@
     self.windowScene = windowScene;
     [windowScene addObserver:self forKeyPath:@"effectiveGeometry" options:NSKeyValueObservingOptionNew context:NULL];
     
-    id contextBinder = [windowScene _contextBinder];
-    id substrate = ((id (*)(id, SEL))objc_msgSend)(contextBinder, sel_registerName("substrate"));
+    _UIContextBinder *contextBinder = [windowScene _contextBinder];
+    id<_UIContextBinding> substrate = contextBinder.substrate;
+    CAContext *context = [_UIContextBinder createContextForBindable:self withSubstrate:substrate];
     struct RECALayerService *layerService = MRUIDefaultLayerService();
-    CAContext *context = ((id (*)(Class, SEL, id, id))objc_msgSend)(objc_lookUpClass("_UIContextBinder"), sel_registerName("createContextForBindable:withSubstrate:"), self, substrate);
     
     [context orderAbove:0];
     context.commitPriority = 100;
     [_context release];
     _context = [context retain];
-    ((void (*)(id, SEL, id))objc_msgSend)(substrate, sel_registerName("attachContext:"), context);
+    [substrate attachContext:context];
     assert(context != nil);
     
     struct REEntity *contextEntity = REEntityCreate();
     
-    UIWindowScene *hostingScene = ((UIWindowScene * (*)(id, SEL))objc_msgSend)(windowScene, sel_registerName("_windowHostingScene"));
+    UIWindowScene *hostingScene = (UIWindowScene *)([windowScene _windowHostingScene]);
     struct REScene *reScene = hostingScene.reScene;
     assert(reScene != NULL);
     RESceneAddEntity(reScene, contextEntity);
@@ -83,8 +80,7 @@
     MRUIApplyBaseConfigurationToNewEntity(contextEntity);
     REEntitySetName(contextEntity, "My CALayerEntity");
     
-    id eventSource = ((id (*)(Class, SEL))objc_msgSend)(objc_lookUpClass("MRUIRealityKitSimulationEventSource"), sel_registerName("sharedInstance"));
-    ((void (*)(id, SEL, id, struct REEntity *))objc_msgSend)(eventSource, sel_registerName("addObserver:forEntity:"), self, contextEntity);
+    [[MRUIRealityKitSimulationEventSource sharedInstance] addObserver:self forEntity:contextEntity];
     REEntityAddComponent(contextEntity, (struct REComponentClass *)4014);
     
     struct REComponent *caLayerComponent = RECALayerServiceCreateRootComponent(layerService, context, contextEntity, NULL);
@@ -98,16 +94,17 @@
     RECALayerComponentSetUpdatesTexture(caLayerComponent, NO);
     RECALayerComponentSetUpdatesClippingPrimitive(caLayerComponent, NO);
     
-    id preferenceHost = ((id (*)(Class, SEL, struct REEntity *))objc_msgSend)(objc_lookUpClass("MRUIEntityPreferenceHost"), sel_registerName("preferenceHostForEntity:"), contextEntity);
-    ((void (*)(id, SEL, id))objc_msgSend)(preferenceHost, sel_registerName("setDelegate:"), self);
+    MRUIEntityPreferenceHost *entityPreferenceHost = [MRUIEntityPreferenceHost preferenceHostForEntity:contextEntity];
+    entityPreferenceHost.delegate = self;
+    self.entityPreferenceHost = entityPreferenceHost;
     
     CALayer *layer = RECALayerComponentGetCALayer(caLayerComponent);
+    RERelease(caLayerComponent);
     assert(layer == _layer);
     
     REEntityAddComponentByClass([layer _careEntity], REAudioPlayerComponentGetComponentType());
     
-    layer.frame = ((CGRect (*)(id, SEL))objc_msgSend)(windowScene, sel_registerName("bounds"));
-    assert([layer valueForKey:@"separatedOptions"] != nil);
+    layer.frame = windowScene.bounds;
     [layer setValue:@{
         @"transform": @YES
     } forKeyPath:@"separatedOptions.updates"];
@@ -126,12 +123,12 @@
     layer.opacity = 1.f;
     layer.hidden = NO;
     layer.backgroundColor = UIColor.systemRedColor.CGColor;
-    assert(((void * (*)(id, SEL))objc_msgSend)(layer, sel_registerName("_careScene")) != NULL);
+    assert([layer _careScene] != NULL);
     
     {
-        id traitEnv = ((id (*)(Class, SEL, struct REEntity *))objc_msgSend)(objc_lookUpClass("MRUIEntityTraitEnvironment"), sel_registerName("traitEnvironmentForEntity:"), [layer _careEntity]);
-        ((void (*)(id, SEL, id))objc_msgSend)(traitEnv, sel_registerName("setDelegate:"), self);
-        [traitEnv retain];
+        MRUIEntityTraitEnvironment *traitEnvironment = [MRUIEntityTraitEnvironment traitEnvironmentForEntity:[layer _careEntity]];
+        traitEnvironment.delegate = self;
+        self.traitEnvironment = traitEnvironment;
     }
     
     {
@@ -176,31 +173,52 @@
             REMaterialParameterBlockValueSetFloat(materialParameter, "metallicScale", 1.f);
             struct REColorGamut4F colorGamut4F;
             unsigned int flag;
-            RECGColorToColorGamut(UIColor.redColor.CGColor, &colorGamut4F, &flag);
+            RECGColorToColorGamut(UIColor.cyanColor.CGColor, &colorGamut4F, &flag);
             REMaterialParameterBlockValueSetColor4(materialParameter, "baseColorTint", flag, &colorGamut4F);
             
             struct REComponent *component = REEntityAddComponentByClass(customEntity, REMaterialParameterBlockArrayComponentGetComponentType());
             REMaterialParameterBlockArrayComponentSetBlockValueAtIndex(component, 0, materialParameter);
         }
         
-        {
-            REEntityAddComponentByClass(customEntity, RENetworkComponentGetComponentType());
-        }
+        REEntityAddComponentByClass(customEntity, RENetworkComponentGetComponentType());
+        RERelease(customEntity);
     }
+    
+    RERelease(contextEntity);
 }
 
-- (void)didReceiveEntityEvent:(id)event {
+- (void)didReceiveEntityEvent:(MRUIEntityEvent *)event {
     NSLog(@"%@", event);
 }
 
+- (MRUIEntityPreferenceHost *)overridePreferenceHostForEntity:(struct REEntity *)entity {
+    return nil;
+}
 
-@synthesize _boundContext;
-@synthesize _contextBinder;
+- (UITraitCollection *)overrideTraitCollectionForChildEntity:(struct REEntity *)childEntity ofEntity:(struct REEntity *)entity {
+    return nil;
+}
+
+- (void)traitCollectionDidChange:(id)traitCollection forEntity:(struct REEntity *)entity {
+    
+}
 
 - (struct UIContextBindingDescription)_bindingDescription {
-    UIWindow *keyWindow = ((id (*)(id, SEL))objc_msgSend)(UIApplication.sharedApplication, sel_registerName("keyWindow"));
-    struct UIContextBindingDescription result = ((struct UIContextBindingDescription (*)(id, SEL))objc_msgSend)(keyWindow, _cmd);
-    return result;
+    id screen = ((id (*)(id, SEL))objc_msgSend)(self.windowScene, @selector(screen));
+    FBSDisplayIdentity *displayIdentity = ((id (*)(id, SEL))objc_msgSend)(screen, @selector(displayIdentity));
+    struct UIContextBindingDescription description = {
+        .displayIdentity = displayIdentity,
+        .ignoresHitTest = NO,
+        .shouldCreateContextAsSecure = YES,
+        .shouldUseRemoteContext = YES,
+        .alwaysGetsContexts = NO,
+        .isWindowServerHostingManaged = YES,
+        .keepContextInBackground = NO,
+        .allowsOcclusionDetectionOverride = NO,
+        .wantsSuperlayerSecurityAnalysis = NO
+    };
+    
+    return description;
 }
 - (NSDictionary *)_contextOptionsWithInitialOptions:(NSDictionary *)options {
     NSMutableDictionary *result = [options mutableCopy];
