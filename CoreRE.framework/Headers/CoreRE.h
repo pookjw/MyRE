@@ -32,3 +32,6 @@
 #import <CoreRE/REUILayerGeometryComponent.h>
 #import <CoreRE/REVideoPlayerComponent.h>
 #import <CoreRE/REVideoComponent.h>
+#import <CoreRE/RESpatialMediaComponent.h>
+#import <CoreRE/REVideoPlayerStatusComponent.h>
+#import <CoreRE/RESpatialMediaStatusComponent.h>
