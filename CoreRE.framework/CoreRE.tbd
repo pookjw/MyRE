@@ -156,7 +156,8 @@ exports:
     _RESpatialMediaStatusComponentGetComponentType,
     _REVideoPlayerStatusComponentGetComponentType,
     _RETransformComponentSetWorldPosition,
-    _REAssetManagerAVSampleBufferVideoRendererMemoryAssetCreate ]
+    _REAssetManagerAVSampleBufferVideoRendererMemoryAssetCreate,
+    _REVideoAssetSetAVSampleBufferVideoRenderer ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

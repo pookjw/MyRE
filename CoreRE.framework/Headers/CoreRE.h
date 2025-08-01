@@ -35,3 +35,4 @@
 #import <CoreRE/RESpatialMediaComponent.h>
 #import <CoreRE/REVideoPlayerStatusComponent.h>
 #import <CoreRE/RESpatialMediaStatusComponent.h>
+#import <CoreRE/REVideoAsset.h>

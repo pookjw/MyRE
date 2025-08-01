@@ -19,6 +19,11 @@
 @synthesize _boundContext;
 @synthesize _contextBinder;
 
+- (void)dealloc {
+    [_bindingLayer release];
+    [super dealloc];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
