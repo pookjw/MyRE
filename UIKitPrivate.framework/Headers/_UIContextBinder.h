@@ -5,13 +5,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 struct __attribute__((aligned(32))) UIContextBindingDescription {
     FBSDisplayIdentity *displayIdentity;
-    BOOL unknown;
+    BOOL displayable;
     BOOL ignoresHitTest;
     BOOL shouldCreateContextAsSecure;
     BOOL shouldUseRemoteContext;
     BOOL alwaysGetsContexts;
     BOOL isWindowServerHostingManaged;
     BOOL keepContextInBackground;
+    BOOL isHostingPortalViews;
     BOOL allowsOcclusionDetectionOverride;
     BOOL wantsSuperlayerSecurityAnalysis;
 };

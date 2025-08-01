@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly) long _currentSeparatedState;
 @property (readonly, nonatomic) BOOL _supportsEntityHitTesting;
 - (void)_requestSeparatedState:(NSInteger)state withReason:(NSString *)reason;
-+ (struct REEntity * _Nullable)_reEntity;
+- (struct REEntity * _Nullable)_reEntity;
 + (BOOL)_supportsSeparationForIdiom:(UIUserInterfaceIdiom)idiom;
 - (NSMutableArray<NSString *> *)_separatedStateTrackedRequestReasons;
 - (NSMutableArray<NSString *> *)_separatedStateSeparatedRequestReasons;

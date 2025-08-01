@@ -11,6 +11,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 MRUI_EXTERN struct RECALayerService * MRUIDefaultLayerService(void);
+MRUI_EXTERN struct REAssetManager * MRUIDefaultAssetManager(void);
 MRUI_EXTERN void MRUIApplyBaseConfigurationToNewEntity(struct REEntity *entity);
 MRUI_EXTERN NSString * MRUIEntityViewLayerRecursiveDescription(struct REEntity * _Nullable entity, UIView * _Nullable view, CALayer * _Nullable layer, NSString *multilinePrefix, NSUInteger options, BOOL viewDesc);
 

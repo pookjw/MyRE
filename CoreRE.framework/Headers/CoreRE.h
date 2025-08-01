@@ -30,3 +30,5 @@
 #import <CoreRE/RETransformService.h>
 #import <CoreRE/REAudioPlayerComponent.h>
 #import <CoreRE/REUILayerGeometryComponent.h>
+#import <CoreRE/REVideoPlayerComponent.h>
+#import <CoreRE/REVideoComponent.h>

@@ -110,7 +110,18 @@ exports:
     _REUILayerGeometryComponentGetComponentType,
     _REUILayerGeometryComponentSetWidth,
     _REUILayerGeometryComponentSetHeight,
-    _REEntityRemoveFromSceneOrParent ]
+    _REEntityRemoveFromSceneOrParent,
+    _REVideoPlayerComponentGetComponentType,
+    _RETransformComponentSetLocalScale,
+    _RETransformComponentGetLocalScale,
+    _RETransformComponentSetWorldScale,
+    _RETransformComponentGetWorldScale,
+    _REAssetManagerMemoryAssetCreateWithRemotePlayer,
+    _REVideoPlayerComponentSetVideoAsset,
+    _REVideoPlayerComponentGetVideoAsset,
+    _REVideoComponentGetComponentType,
+    _REVideoComponentSetVideoAsset,
+    _REVideoComponentGetVideoAsset ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

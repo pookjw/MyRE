@@ -14,7 +14,8 @@ exports:
     _OBJC_CLASS_$_MRUIEntityPreferenceHost,
     __OBJC_PROTOCOL_$_MRUIEntityPreferenceHostDelegate,
     _OBJC_CLASS_$_MRUIEntityTraitEnvironment,
-    __OBJC_PROTOCOL_$_MRUIEntityTraitDelegate ]
+    __OBJC_PROTOCOL_$_MRUIEntityTraitDelegate,
+    _MRUIDefaultAssetManager ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

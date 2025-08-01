@@ -15,7 +15,7 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 
-@interface LayerSceneDelegate () <_UIContextBindable, MRUIRealityKitSimulationEventSourceObserver, MRUIEntityPreferenceHostDelegate, MRUIEntityTraitDelegate>
+@interface LayerSceneDelegate () <MRUIRealityKitSimulationEventSourceObserver, MRUIEntityPreferenceHostDelegate, MRUIEntityTraitDelegate>
 @property (retain, nonatomic, nullable) CALayer *layer;
 @property (weak, nonatomic, nullable) UIWindowScene *windowScene;
 @property (retain, nonatomic, nullable) MRUIEntityPreferenceHost *entityPreferenceHost;
@@ -23,8 +23,6 @@
 @end
 
 @implementation LayerSceneDelegate
-@synthesize _boundContext;
-@synthesize _contextBinder;
 
 - (void)dealloc {
     [[MRUIRealityKitSimulationEventSource sharedInstance] removeObserver:self];
@@ -34,6 +32,7 @@
     if (windowScene) {
         [windowScene removeObserver:self forKeyPath:@"effectiveGeometry"];
     }
+    
     [super dealloc];
 }
 
@@ -59,15 +58,56 @@
     self.windowScene = windowScene;
     [windowScene addObserver:self forKeyPath:@"effectiveGeometry" options:NSKeyValueObservingOptionNew context:NULL];
     
-    _UIContextBinder *contextBinder = [windowScene _contextBinder];
-    id<_UIContextBinding> substrate = contextBinder.substrate;
-    CAContext *context = [_UIContextBinder createContextForBindable:self withSubstrate:substrate];
+    id screen = ((id (*)(id, SEL))objc_msgSend)(self.windowScene, @selector(screen));
+    FBSDisplayIdentity *displayIdentity = ((id (*)(id, SEL))objc_msgSend)(screen, @selector(displayIdentity));
+    struct UIContextBindingDescription description = {
+        .displayIdentity = displayIdentity,
+        .displayable = NO,
+        .ignoresHitTest = NO,
+        .shouldCreateContextAsSecure = YES,
+        .shouldUseRemoteContext = YES,
+        .alwaysGetsContexts = NO,
+        .isWindowServerHostingManaged = YES,
+        .keepContextInBackground = NO,
+        .allowsOcclusionDetectionOverride = NO,
+        .wantsSuperlayerSecurityAnalysis = NO
+    };
+    
+    NSMutableDictionary *options = [[NSMutableDictionary alloc] init];
+    [options setObject:@([displayIdentity displayID]) forKey:@"displayId"];
+    [options setObject:@(description.displayable) forKey:@"displayable"];
+    if (description.ignoresHitTest) {
+        [options setObject:@(description.ignoresHitTest) forKey:@"ignoresHitTest"];
+    }
+    if (description.shouldCreateContextAsSecure) {
+        [options setObject:@(description.shouldCreateContextAsSecure) forKey:@"secure"];
+    }
+    if (description.allowsOcclusionDetectionOverride) {
+        [options setObject:@(description.allowsOcclusionDetectionOverride) forKey:@"allowsOcclusionDetectionOverride"];
+    }
+    
+    [(NSDictionary *)RECAContextCreateDefaultOptions(NULL) enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+        [options setObject:obj forKey:key];
+    }];
+    
+    CAContext *context;
+    if (description.shouldUseRemoteContext) {
+        context = [CAContext remoteContextWithOptions:options];
+    } else {
+        context = [CAContext localContextWithOptions:options];
+    }
+    assert(context != nil);
+    [options release];
+    
     struct RECALayerService *layerService = MRUIDefaultLayerService();
     
     [context orderAbove:0];
     context.commitPriority = 100;
-    [substrate attachContext:context];
-    assert(context != nil);
+    context.layer = self.layer;
+    
+    FBSCAContextSceneLayer *sceneLayer = [[FBSCAContextSceneLayer alloc] initWithCAContext:context];
+    [scene._FBSScene attachLayer:sceneLayer];
+    [sceneLayer release];
     
     struct REEntity *contextEntity = REEntityCreate();
     
@@ -200,48 +240,6 @@
 
 - (void)traitCollectionDidChange:(id)traitCollection forEntity:(struct REEntity *)entity {
     
-}
-
-- (struct UIContextBindingDescription)_bindingDescription {
-    id screen = ((id (*)(id, SEL))objc_msgSend)(self.windowScene, @selector(screen));
-    FBSDisplayIdentity *displayIdentity = ((id (*)(id, SEL))objc_msgSend)(screen, @selector(displayIdentity));
-    struct UIContextBindingDescription description = {
-        .displayIdentity = displayIdentity,
-        .ignoresHitTest = NO,
-        .shouldCreateContextAsSecure = YES,
-        .shouldUseRemoteContext = YES,
-        .alwaysGetsContexts = NO,
-        .isWindowServerHostingManaged = YES,
-        .keepContextInBackground = NO,
-        .allowsOcclusionDetectionOverride = NO,
-        .wantsSuperlayerSecurityAnalysis = NO
-    };
-    
-    return description;
-}
-
-- (NSDictionary *)_contextOptionsWithInitialOptions:(NSDictionary *)options {
-    NSMutableDictionary *result = [options mutableCopy];
-    
-    // disassembly of -[UIWindow(MRUIKit) _configureContextOptions:]
-    [(NSDictionary *)RECAContextCreateDefaultOptions(NULL) enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-        [result setObject:obj forKey:key];
-    }];
-    
-    return [result autorelease];
-}
-
-- (CGFloat)_bindableLevel {
-    return UIWindowLevelStatusBar;
-}
-
-- (CALayer *)_bindingLayer {
-    return _layer;
-}
-
-- (BOOL)_isVisible {
-    abort();
-    return NO;
 }
 
 @end

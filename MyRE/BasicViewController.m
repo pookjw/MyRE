@@ -57,6 +57,11 @@
     }
     
     {
+        struct REComponent *transformComponent = REEntityGetOrAddComponentByClass(customEntity, RETransformComponentGetComponentType());
+        RETransformComponentSetLocalScale(transformComponent, simd_make_float3(0.4f, 0.4f, 0.4f));
+    }
+    
+    {
         struct REMaterialParameter *materialParameter = REMaterialParameterBlockValueCreate();
         REMaterialParameterBlockValueClearParameter(materialParameter);
         REMaterialParameterBlockValueSetFloat(materialParameter, "roughnessScale", 0.f);
