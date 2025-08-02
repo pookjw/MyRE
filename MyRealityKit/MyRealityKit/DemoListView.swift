@@ -31,6 +31,7 @@ extension DemoListView {
         static let defaultCase: Demo = Demo.allCases.last!
         
         case videoPlayer
+        case imagePresentation
         
         var id: Int {
             rawValue
@@ -41,6 +42,8 @@ extension DemoListView {
             switch self {
             case .videoPlayer:
                 VideoPlayerView()
+            case .imagePresentation:
+                ImagePresentationView()
             }
         }
     }

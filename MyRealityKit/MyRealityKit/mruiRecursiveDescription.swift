@@ -10,10 +10,10 @@ public import UIKit
 
 /*
  expr -l objc -O -- [(Class)NSClassFromString(@"UIScene") _scenesIncludingInternal:0x1]
- expr -l objc -i0 -O -- [(Class)NSClassFromString(@"MRUIHelper") descriptionForWindow:(id)0x0]
+ expr -l objc -i0 -O -- [(Class)NSClassFromString(@"__MRUIHelper") descriptionForWindow:(id)0x0]
  */
 
-@_objcRuntimeName(__MRUIHeloper)
+@_objcRuntimeName(__MRUIHelper)
 fileprivate final class MRUIHelper {
     @objc(descriptionForWindow:) class func description(for window: UIWindow) -> String {
         mruiRecursiveDescription(window: window)

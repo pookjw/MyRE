@@ -43,7 +43,7 @@
     struct REAssetHandle *assetHandle = REAssetHandleCreateNewMutableWithAssetDescriptors(assetManager, &descriptor, 1);
     RERelease(descriptor);
     REAssetHandleLoadNow(assetHandle);
-    REAssetSetNetworkSharingMode(assetHandle, false);
+    REAssetSetNetworkSharingMode(assetHandle, NO);
     REMeshComponentSetMesh(meshComponent, assetHandle);
     RERelease(assetHandle);
     

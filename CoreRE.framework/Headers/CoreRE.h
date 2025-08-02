@@ -36,3 +36,8 @@
 #import <CoreRE/REVideoPlayerStatusComponent.h>
 #import <CoreRE/RESpatialMediaStatusComponent.h>
 #import <CoreRE/REVideoAsset.h>
+#import <CoreRE/REImagePresentationComponent.h>
+#import <CoreRE/RETextureImportOperation.h>
+#import <CoreRE/REAssetLoadRequest.h>
+#import <CoreRE/REImagePresentationStatusComponent.h>
+#import <CoreRE/RETextureAsset.h>

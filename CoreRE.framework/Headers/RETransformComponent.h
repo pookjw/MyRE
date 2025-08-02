@@ -13,5 +13,6 @@ RE_EXTERN simd_float3 RETransformComponentGetLocalScale(struct REComponent *);
 RE_EXTERN void RETransformComponentSetWorldScale(struct REComponent *, simd_float3 scale);
 RE_EXTERN simd_float3 RETransformComponentGetWorldScale(struct REComponent *);
 RE_EXTERN void RETransformComponentSetWorldPosition(struct REComponent *, simd_float3 position);
+RE_EXTERN void RETransformComponentSetLocalSRT(struct REComponent *, simd_float4 scale, simd_float4 rotation, simd_float4 translation);
 
 NS_ASSUME_NONNULL_END

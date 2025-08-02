@@ -11,6 +11,7 @@
 #import "LayerScenePresenterViewController.h"
 #import "VideoPlayerViewController.h"
 #import "VideoRendererViewController.h"
+#import "ImagePresentationViewController.h"
 
 @interface ClassesViewController ()
 @property (class, nonatomic, readonly, getter=_classes) NSArray<Class> *classes;
@@ -22,6 +23,7 @@
 
 + (NSArray<Class> *)_classes {
     return @[
+        [ImagePresentationViewController class],
         [VideoRendererViewController class],
         [VideoPlayerViewController class],
         [LayerScenePresenterViewController class],
@@ -55,7 +57,7 @@
     [super viewDidLoad];
     
     Class _class = ClassesViewController.classes.firstObject;
-//    Class _class = [CALayerViewController class];
+//    Class _class = [VideoPlayerViewController class];
     __kindof UIViewController *viewController = [[_class alloc] init];
     [self.navigationController pushViewController:viewController animated:YES];
     [viewController release];

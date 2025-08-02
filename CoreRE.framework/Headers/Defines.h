@@ -47,3 +47,9 @@ struct REScene {};
 struct RECALayerService {};
 
 struct RETransformService {};
+
+struct RETextureImportOperation {};
+
+struct REAssetLoadRequest {};
+
+struct RESpatial3DImage {};

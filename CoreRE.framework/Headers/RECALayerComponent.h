@@ -6,7 +6,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 RE_EXTERN struct REComponentClass * RECALayerComponentGetComponentType(void);
 RE_EXTERN void RECALayerComponentSetRespectsLayerTransform(struct REComponent *, BOOL);
-RE_EXTERN void RECALayerComponentRootSetPointsPerMeter(struct REComponent *, CGFloat);
+RE_EXTERN void RECALayerComponentRootSetPointsPerMeter(struct REComponent *, float);
 RE_EXTERN void RECALayerComponentSetShouldSyncToRemotes(struct REComponent *, BOOL);
 RE_EXTERN CALayer * _Nullable RECALayerComponentGetCALayer(struct REComponent *);
 RE_EXTERN void RECALayerComponentSetUpdatesMesh(struct REComponent *, BOOL);

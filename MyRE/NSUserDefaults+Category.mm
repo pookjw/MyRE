@@ -53,7 +53,7 @@ namespace mr_NSUserDefaults {
 @implementation NSUserDefaults (Category)
 
 + (void)load {
-    mr_NSUserDefaults::objectForKey_::swizzle();
+//    mr_NSUserDefaults::objectForKey_::swizzle();
 }
 
 @end
