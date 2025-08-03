@@ -24,6 +24,7 @@
     
     struct REComponent *transformComponent = REEntityGetOrAddComponentByClass(customEntity, RETransformComponentGetComponentType());
     RETransformComponentSetWorldPosition(transformComponent, simd_make_float3(0.f, 0.f, 0.1f));
+    RETransformComponentSetLocalScale(transformComponent, simd_make_float3(0.2f, 0.2f, 0.2f));
     
     struct REComponent *imagePresentationComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationComponentGetComponentType());
     REImagePresentationComponentSetScreenHeight(imagePresentationComponent, 1.f);
