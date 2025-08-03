@@ -29,5 +29,6 @@ RE_EXTERN BOOL REIsEntityHidden(struct REEntity *entity);
 RE_EXTERN BOOL REEntityIsVisible(struct REEntity *entity);
 RE_EXTERN void REEntitySetParent(struct REEntity *entity, struct REEntity *parent);
 RE_EXTERN void REEntityRemoveFromSceneOrParent(struct REEntity *entity);
+RE_EXTERN id REEntityGetSwiftObject(struct REEntity *entity);
 
 NS_ASSUME_NONNULL_END

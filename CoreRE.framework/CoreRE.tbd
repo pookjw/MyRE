@@ -207,7 +207,13 @@ exports:
     _RETransformComponentSetLocalSRT,
     _REImagePresentationStatusComponentPublishUpdatesInApp,
     _RETextureAssetGetSize,
-    _RESpatialMediaStatusComponentPublishUpdatesInApp ]
+    _RESpatialMediaStatusComponentPublishUpdatesInApp,
+    _REAssetGetSwiftObject,
+    _RESceneGetSwiftObject,
+    _REEntityGetSwiftObject,
+    _REAssetLoadRequestWaitForCompletion,
+    _REAssetLoadRequestWaitForCompletionFromOtherQueue,
+    _REAssetLoadRequestCopyError ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

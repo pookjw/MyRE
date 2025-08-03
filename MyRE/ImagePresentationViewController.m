@@ -25,119 +25,169 @@
     struct REComponent *transformComponent = REEntityGetOrAddComponentByClass(customEntity, RETransformComponentGetComponentType());
     RETransformComponentSetWorldPosition(transformComponent, simd_make_float3(0.f, 0.f, 0.1f));
     
+    struct REComponent *imagePresentationComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationComponentGetComponentType());
+    REImagePresentationComponentSetScreenHeight(imagePresentationComponent, 1.f);
+    REImagePresentationComponentSetImageContentType(imagePresentationComponent, 2);
+    REImagePresentationComponentSetContentDimensionHint(imagePresentationComponent, 0.f);
+    REImagePresentationComponentSetLoadingImageTextureAsset(imagePresentationComponent, NULL);
+    REImagePresentationComponentSetStereoBaseline(imagePresentationComponent, 19.272f);
+    REImagePresentationComponentSetDisparityAdjustment(imagePresentationComponent, 0.024f);
+    REImagePresentationComponentSetHorizontalFOV(imagePresentationComponent, 68.5f);
+    REImagePresentationComponentSetShouldLockMeshToImageAspectRatio(imagePresentationComponent, YES);
+    REImagePresentationComponentSetCornerRadiusInPoints(imagePresentationComponent, 46.f);
+    REImagePresentationComponentSetSpatial3DCollapseStrength(imagePresentationComponent, 0.f);
+    REImagePresentationComponentSetEnableSpecularAndFresnelEffects(imagePresentationComponent, YES);
+    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 0.f);
+    REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 0.f);
+    
+    struct REComponent *imagePresentationStatusComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationStatusComponentGetComponentType());
+    
+    struct REComponent *spatialMediaComponent = REEntityGetOrAddComponentByClass(customEntity, RESpatialMediaComponentGetComponentType());
+    struct REComponent *spatialMediaStatusComponent = REEntityGetOrAddComponentByClass(customEntity, RESpatialMediaStatusComponentGetComponentType());
+    
+    struct REComponent *networkComponent = REEntityGetOrAddComponentByClass(customEntity, RENetworkComponentGetComponentType());
+    
+    REImagePresentationComponentSetSpatial3DImage(imagePresentationComponent, NULL);
+    REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
+    
     NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image" withExtension:UTTypeHEIC.preferredFilenameExtension];
     assert(url != nil);
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((CFURLRef)url, NULL);
     size_t count = CGImageSourceGetCount(imageSource);
     if (count > 0) {
-        // orientation 담겨 있음
-        CFDictionaryRef properties = CGImageSourceCopyProperties(imageSource, NULL);
-        // Mono / 나머지 Stereo
-        size_t primaryImageIndex = CGImageSourceGetPrimaryImageIndex(imageSource);
-        CFRelease(properties);
+        NSDictionary *properties = (id)CGImageSourceCopyProperties(imageSource, NULL);
+        NSArray<NSDictionary *> *groups = [properties objectForKey:(id)kCGImagePropertyGroups];
+        
+        NSDictionary *stereoPairGroup = nil;
+        for (NSDictionary *group in groups) {
+            NSString *groupType = [group objectForKey:(id)kCGImagePropertyGroupType];
+            if ([groupType isEqual:(id)kCGImagePropertyGroupTypeStereoPair]) {
+                stereoPairGroup = group;
+                break;
+            }
+        }
+        
+        unsigned int primaryImageIndex = (unsigned int)CGImageSourceGetPrimaryImageIndex(imageSource);
+        
+        if (stereoPairGroup == nil) {
+            struct REAsset *monoAsset = [self newMonoTextureAssetWithImageSource:imageSource index:primaryImageIndex];
+            REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, monoAsset);
+            RERelease(monoAsset);
+            CFRelease(imageSource);
+            return;
+        }
+        
+        unsigned int leftImageIndex = ((NSNumber *)[stereoPairGroup objectForKey:(id)kCGImagePropertyGroupImageIndexLeft]).unsignedIntValue;
+        unsigned int rightImageIndex = ((NSNumber *)[stereoPairGroup objectForKey:(id)kCGImagePropertyGroupImageIndexRight]).unsignedIntValue;
+        
+        NSDictionary *fileContents = [properties objectForKey:(id)kCGImagePropertyFileContentsDictionary];
+        NSNumber *imageCount = [fileContents objectForKey:(id)kCGImagePropertyImageCount];
+        assert(imageCount.unsignedIntValue == 3);
+        NSArray<NSDictionary *> *images = [fileContents objectForKey:(id)kCGImagePropertyImages];
+        
+        NSDictionary *primaryImage = nil;
+        NSDictionary *leftImage = nil;
+        NSDictionary *rightImage = nil;
+        for (NSDictionary *image in images) {
+            NSNumber *imageIndex = [image objectForKey:(id)kCGImagePropertyImageIndex];
+            assert(imageIndex != nil);
+            if (imageIndex.unsignedIntValue == primaryImageIndex) {
+                primaryImage = image;
+            } else if (imageIndex.unsignedIntValue == leftImageIndex) {
+                leftImage = image;
+            } else if (imageIndex.unsignedIntValue == rightImageIndex) {
+                rightImage = image;
+            }
+        }
+        
+        CGImagePropertyOrientation monoOrientation = ((NSNumber *)[primaryImage objectForKey:(id)kCGImagePropertyOrientation]).unsignedIntValue;
+        CGImagePropertyOrientation stereoOrientation = ((NSNumber *)[leftImage objectForKey:(id)kCGImagePropertyOrientation]).unsignedIntValue;
+        assert(stereoOrientation == ((NSNumber *)[rightImage objectForKey:(id)kCGImagePropertyOrientation]).unsignedIntValue);
+        
+        [properties release];
+        
+        REImagePresentationComponentSetMonoImageOrientation(imagePresentationComponent, monoOrientation);
+        REImagePresentationComponentSetStereoImageOrientation(imagePresentationComponent, stereoOrientation);
+        
+        struct REAsset *monoAsset = [self newMonoTextureAssetWithImageSource:imageSource index:primaryImageIndex];
+        REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, monoAsset);
+        RERelease(monoAsset);
+        
+        struct REAsset *stereoAsset = [self newStereoTextureAssetWithImageSource:imageSource leftIndex:leftImageIndex rightIndex:rightImageIndex];
+        REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, stereoAsset);
+        RERelease(stereoAsset);
+    } else {
+        abort();
     }
     
-    struct REEngine *engine = REEngineGetShared();
-    struct REServiceLocator *serviceLocator = REEngineGetServiceLocator(engine);
-    struct REAssetManager *assetManager = REServiceLocatorGetAssetManager(serviceLocator);
+    RERelease(customEntity);
+    CFRelease(imageSource);
+}
+
+- (struct REAsset *)newMonoTextureAssetWithImageSource:(CGImageSourceRef)imageSource index:(unsigned int)index {
+    unsigned int indexes[1] = {index};
     
-    void (^block)(struct REAsset *stereoAsset) = ^(struct REAsset *stereoAsset){
-        unsigned int count[1] = {0};
-        
-        NSError * _Nullable error = nil;
-        struct RETextureImportOperation *operation = RETextureImportOperationCreateFromImageSourceArray(@[(id)imageSource], count, MRUIDefaultServiceLocator(), MTLTextureType2DArray, &error);
-        assert(operation != NULL);
-        
-        RETextureImportOperationSetSemantic(operation, 3);
-        RETextureImportOperationSetMipmapMode(operation, 0);
-        RETextureImportOperationSetCompressionType(operation, 0);
-        RETextureImportOperationSetReduceMemoryPeak(operation, NO);
-        
-        BOOL result = RETextureImportOperationRun(operation, &error);
-        assert(result);
-        
-        struct REAsset *asset = RETextureImportOperationCreateAsset(operation, NO, &error);
-        assert(asset != NULL);
-        REAssetSetNetworkSharingMode(asset, YES);
-        
-        struct REAssetLoadRequest *request = REAssetManagerCreateAssetRequest(assetManager);
-        result = REAssetLoadRequestSetLoadAndWaitForResourceSharingClients(request, YES, YES, &error);
-        assert(result);
-        REAssetLoadRequestSetCompletionHandler(request, ^(BOOL success){
-            assert(success);
-            
-            struct REComponent *imagePresentationComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationComponentGetComponentType());
-            REImagePresentationComponentSetScreenHeight(imagePresentationComponent, 1.f);
-            REImagePresentationComponentSetImageContentType(imagePresentationComponent, 2);
-            REImagePresentationComponentSetContentDimensionHint(imagePresentationComponent, 0.f);
-            REImagePresentationComponentSetLoadingImageTextureAsset(imagePresentationComponent, NULL);
-            REImagePresentationComponentSetMonoImageOrientation(imagePresentationComponent, kCGImagePropertyOrientationUp);
-            REImagePresentationComponentSetStereoBaseline(imagePresentationComponent, 19.272f);
-            REImagePresentationComponentSetDisparityAdjustment(imagePresentationComponent, 0.024f);
-            REImagePresentationComponentSetHorizontalFOV(imagePresentationComponent, 68.5f);
-            REImagePresentationComponentSetStereoImageOrientation(imagePresentationComponent, kCGImagePropertyOrientationUp);
-            REImagePresentationComponentSetShouldLockMeshToImageAspectRatio(imagePresentationComponent, YES);
-            REImagePresentationComponentSetCornerRadiusInPoints(imagePresentationComponent, 46.f);
-            REImagePresentationComponentSetSpatial3DCollapseStrength(imagePresentationComponent, 0.f);
-            REImagePresentationComponentSetEnableSpecularAndFresnelEffects(imagePresentationComponent, YES);
-            REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 0.f);
-            REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 0.f);
-            
-            struct REComponent *imagePresentationStatusComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationStatusComponentGetComponentType());
-            
-            struct REComponent *spatialMediaComponent = REEntityGetOrAddComponentByClass(customEntity, RESpatialMediaComponentGetComponentType());
-            struct REComponent *spatialMediaStatusComponent = REEntityGetOrAddComponentByClass(customEntity, RESpatialMediaStatusComponentGetComponentType());
-            
-            struct REComponent *networkComponent = REEntityGetOrAddComponentByClass(customEntity, RENetworkComponentGetComponentType());
-            
-            REImagePresentationComponentSetSpatial3DImage(imagePresentationComponent, NULL);
-            REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
-            REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, asset);
-            REImagePresentationComponentSetStereoImageTextureAsset(imagePresentationComponent, stereoAsset);
-            
-            RENetworkMarkComponentDirty(imagePresentationComponent);
-            RENetworkMarkComponentDirty(imagePresentationStatusComponent);
-            RENetworkMarkComponentDirty(spatialMediaStatusComponent);
-            RENetworkMarkComponentDirty(spatialMediaComponent);
-            REImagePresentationStatusComponentPublishUpdatesInApp(imagePresentationStatusComponent);
-            RESpatialMediaStatusComponentPublishUpdatesInApp(spatialMediaStatusComponent);
-            
-            assert(REImagePresentationComponentGetMonoImageTextureAsset(imagePresentationComponent) != NULL);
-            assert(REImagePresentationComponentGetStereoImageTextureAsset(imagePresentationComponent) != NULL);
-        });
-        REAssetLoadRequestAddAsset(request, asset);
-    };
+    NSError * _Nullable error = nil;
+    struct RETextureImportOperation *operation = RETextureImportOperationCreateFromImageSourceArray(@[(id)imageSource], indexes, MRUIDefaultServiceLocator(), MTLTextureType2DArray, &error);
+    assert(operation != NULL);
     
-    {
-        unsigned int count[2] = {2, 1};
-        
-        NSError * _Nullable error = nil;
-        struct RETextureImportOperation *operation = RETextureImportOperationCreateFromImageSourceArray(@[(id)imageSource, (id)imageSource], count, MRUIDefaultServiceLocator(), MTLTextureType2DArray, &error);
-        assert(operation != NULL);
-        
-        RETextureImportOperationSetSemantic(operation, 3);
-        RETextureImportOperationSetMipmapMode(operation, 0);
-        RETextureImportOperationSetCompressionType(operation, 0);
-        RETextureImportOperationSetReduceMemoryPeak(operation, NO);
-        
-        BOOL result = RETextureImportOperationRun(operation, &error);
-        assert(result);
-        
-        struct REAsset *asset = RETextureImportOperationCreateAsset(operation, NO, &error);
-        assert(asset != NULL);
-        REAssetSetNetworkSharingMode(asset, YES);
-        
-        struct REAssetLoadRequest *request = REAssetManagerCreateAssetRequest(assetManager);
-        result = REAssetLoadRequestSetLoadAndWaitForResourceSharingClients(request, YES, YES, &error);
-        assert(result);
-        REAssetLoadRequestSetCompletionHandler(request, ^(BOOL success){
-            assert(success);
-            block(asset);
-        });
-        REAssetLoadRequestAddAsset(request, asset);
-    }
+    RETextureImportOperationSetSemantic(operation, 3);
+    RETextureImportOperationSetMipmapMode(operation, 0);
+    RETextureImportOperationSetCompressionType(operation, 0);
+    RETextureImportOperationSetReduceMemoryPeak(operation, NO);
     
-//    CFRelease(imageSource);
+    BOOL result = RETextureImportOperationRun(operation, &error);
+    assert(result);
+    
+    struct REAsset *asset = RETextureImportOperationCreateAsset(operation, NO, &error);
+    assert(asset != NULL);
+    RERelease(operation);
+    
+    REAssetSetNetworkSharingMode(asset, YES);
+    
+    struct REAssetLoadRequest *request = REAssetManagerCreateAssetRequest(MRUIDefaultAssetManager());
+    result = REAssetLoadRequestSetLoadAndWaitForResourceSharingClients(request, YES, YES, &error);
+    assert(result);
+    
+    REAssetLoadRequestAddAsset(request, asset);
+    REAssetLoadRequestWaitForCompletion(request);
+    error = [REAssetLoadRequestCopyError(request) autorelease];
+    assert(error == nil);
+    RERelease(request);
+    return asset;
+}
+
+- (struct REAsset *)newStereoTextureAssetWithImageSource:(CGImageSourceRef)imageSource leftIndex:(unsigned int)leftIndex rightIndex:(unsigned int)rightIndex {
+    unsigned int indexes[2] = {leftIndex, rightIndex};
+    
+    NSError * _Nullable error = nil;
+    struct RETextureImportOperation *operation = RETextureImportOperationCreateFromImageSourceArray(@[(id)imageSource, (id)imageSource], indexes, MRUIDefaultServiceLocator(), MTLTextureType2DArray, &error);
+    assert(operation != NULL);
+    
+    RETextureImportOperationSetSemantic(operation, 3);
+    RETextureImportOperationSetMipmapMode(operation, 0);
+    RETextureImportOperationSetCompressionType(operation, 0);
+    RETextureImportOperationSetReduceMemoryPeak(operation, NO);
+    
+    BOOL result = RETextureImportOperationRun(operation, &error);
+    assert(result);
+    
+    struct REAsset *asset = RETextureImportOperationCreateAsset(operation, NO, &error);
+    assert(asset != NULL);
+    RERelease(operation);
+    
+    REAssetSetNetworkSharingMode(asset, YES);
+    
+    struct REAssetLoadRequest *request = REAssetManagerCreateAssetRequest(MRUIDefaultAssetManager());
+    result = REAssetLoadRequestSetLoadAndWaitForResourceSharingClients(request, YES, YES, &error);
+    assert(result);
+    
+    REAssetLoadRequestAddAsset(request, asset);
+    REAssetLoadRequestWaitForCompletion(request);
+    error = [REAssetLoadRequestCopyError(request) autorelease];
+    assert(error == nil);
+    RERelease(request);
+    return asset;
 }
 
 @end

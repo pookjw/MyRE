@@ -41,3 +41,4 @@
 #import <CoreRE/REAssetLoadRequest.h>
 #import <CoreRE/REImagePresentationStatusComponent.h>
 #import <CoreRE/RETextureAsset.h>
+#import <CoreRE/REAsset.h>
