@@ -1,0 +1,62 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.1.2 effective-5.10 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+// swift-module-flags: -target arm64e-apple-xros2.5 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -library-level api -enable-experimental-feature Macros -enable-experimental-feature ExtensionMacros -enable-experimental-feature IsolatedAny2 -enable-upcoming-feature InferSendableFromCaptures -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -user-module-version 6.5.4 -module-name AlchemistService -package-name AlchemistService
+// swift-module-flags-ignorable:  -interface-compiler-version 6.1.2
+@_exported import Metal
+@_exported import MXI
+@_exported import CoreRE3DGSFoundation
+@_exported import CoreGraphics
+@_exported import _Concurrency
+
+public final class ALCService {
+    @_silgen_name("$s16AlchemistService10ALCServiceC9mtlDevice13configuration12eventHandlerACSo9MTLDevice_p_AA16ALCConfigurationVSbAC15GenerationEventO_AA21ALCIntermediateOutput_pSgtcSgtKcfc")
+    public init(mtlDevice: Metal.MTLDevice, configuration: AlchemistService.ALCConfiguration, eventHandler: (AlchemistService.ALCService.GenerationEvent, AlchemistService.ALCIntermediateOutput?) -> Swift.Bool?) throws
+
+    public enum GenerationEvent {
+        case failed
+        case finished
+        case progress(Swift.UInt, Swift.UInt)
+        case starting
+    }
+
+    public enum GenerationOption: Swift.Equatable, Swift.Hashable {
+        case clientName
+        case focalLengthPx
+        case adjustmentParams
+    }
+
+    @_silgen_name("$s16AlchemistService10ALCServiceC8generate4from4with7optionsSo8MXISceneCSo7CIImageC_AA16ALCConfigurationVSDyAC16GenerationOptionOypGSgtYaKFTjTu")
+    public func generate(from: CoreGraphics.CGImage, with: AlchemistService.ALCConfiguration, options: Swift.Optional<Swift.Dictionary<AlchemistService.ALCService.GenerationOption, Any>>) async throws -> MXI.MXIScene
+}
+
+public struct ALCConfiguration {
+    public var bakingOptions: AlchemistService.ALCBakingOptions {
+        get
+        set
+    }
+    public var sorterOptions : AlchemistService.ALCSorterOptions {
+        get
+        set
+    }
+    public init()
+}
+
+public struct ALCBakingOptions {
+    public var enableRefinement: Swift.Bool {
+        get
+        set
+    }
+    public var type: MXI.MXIType {
+        get
+        set
+    }
+
+    @_silgen_name("$s16AlchemistService16ALCBakingOptionsV4typeSo7MXITypeVvs")
+    public mutating func set(type: MXI.MXIType)
+}
+
+public struct ALCSorterOptions {
+    public var sortingMode: CoreRE3DGSFoundation.GSSortingMode
+}
+
+public struct ALCIntermediateOutput {}

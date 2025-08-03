@@ -1,0 +1,5 @@
+framework module CoreRE3DGSFoundation {
+    umbrella header "CoreRE3DGSFoundation.h"
+    export *
+    module * { export * }
+}

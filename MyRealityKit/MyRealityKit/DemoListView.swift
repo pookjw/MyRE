@@ -29,9 +29,11 @@ struct DemoListView: View {
 extension DemoListView {
     fileprivate enum Demo: Int, CaseIterable, Identifiable, Hashable {
         static let defaultCase: Demo = Demo.allCases.last!
+//        static let defaultCase: Demo = .imagePresentation
         
         case videoPlayer
         case imagePresentation
+        case spatial3DImage
         
         var id: Int {
             rawValue
@@ -44,6 +46,8 @@ extension DemoListView {
                 VideoPlayerView()
             case .imagePresentation:
                 ImagePresentationView()
+            case .spatial3DImage:
+                Spatial3DImageView()
             }
         }
     }

@@ -11,6 +11,10 @@
 		4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */; };
 		4F82C0122E2BBA8300216AEA /* CoreRE.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F82C0112E2BBA8300216AEA /* CoreRE.framework */; };
 		4F82C0162E2BBAEA00216AEA /* MRUIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F82C0152E2BBAEA00216AEA /* MRUIKit.framework */; };
+		4FA655532E3F45C100AAC704 /* AlchemistBase.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA655512E3F45C100AAC704 /* AlchemistBase.xcframework */; };
+		4FA655552E3F45C100AAC704 /* AlchemistService.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA655522E3F45C100AAC704 /* AlchemistService.xcframework */; };
+		4FA6565B2E3FB8C400AAC704 /* MXI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA656572E3FB7DF00AAC704 /* MXI.framework */; };
+		4FA658762E3FBEEF00AAC704 /* CoreRE3DGSFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */; };
 		4FBDBCA52E2E4E3700CDAF27 /* UIKitPrivate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBDBCA42E2E4E3700CDAF27 /* UIKitPrivate.framework */; };
 		4FBDBCA92E2E4E4600CDAF27 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBDBCA82E2E4E4600CDAF27 /* UIKit.framework */; };
 /* End PBXBuildFile section */
@@ -21,6 +25,10 @@
 		4F82BFC22E2BB5ED00216AEA /* MyRE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyRE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F82C0112E2BBA8300216AEA /* CoreRE.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CoreRE.framework; sourceTree = "<group>"; };
 		4F82C0152E2BBAEA00216AEA /* MRUIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MRUIKit.framework; sourceTree = "<group>"; };
+		4FA655512E3F45C100AAC704 /* AlchemistBase.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = AlchemistBase.xcframework; sourceTree = "<group>"; };
+		4FA655522E3F45C100AAC704 /* AlchemistService.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = AlchemistService.xcframework; sourceTree = "<group>"; };
+		4FA656572E3FB7DF00AAC704 /* MXI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MXI.framework; sourceTree = "<group>"; };
+		4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = folder; path = CoreRE3DGSFoundation.framework; sourceTree = "<group>"; };
 		4FBDBCA42E2E4E3700CDAF27 /* UIKitPrivate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = UIKitPrivate.framework; sourceTree = "<group>"; };
 		4FBDBCA82E2E4E4600CDAF27 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -51,12 +59,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FA658762E3FBEEF00AAC704 /* CoreRE3DGSFoundation.framework in Frameworks */,
 				4FBDBCA92E2E4E4600CDAF27 /* UIKit.framework in Frameworks */,
+				4FA6565B2E3FB8C400AAC704 /* MXI.framework in Frameworks */,
 				4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */,
 				4F82C0162E2BBAEA00216AEA /* MRUIKit.framework in Frameworks */,
 				4F5EA2B52E3A529700061EAF /* FrontBoardServices.framework in Frameworks */,
 				4FBDBCA52E2E4E3700CDAF27 /* UIKitPrivate.framework in Frameworks */,
 				4F82C0122E2BBA8300216AEA /* CoreRE.framework in Frameworks */,
+				4FA655552E3F45C100AAC704 /* AlchemistService.xcframework in Frameworks */,
+				4FA655532E3F45C100AAC704 /* AlchemistBase.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +95,10 @@
 		4F82BFDF2E2BB7F800216AEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */,
+				4FA656572E3FB7DF00AAC704 /* MXI.framework */,
+				4FA655512E3F45C100AAC704 /* AlchemistBase.xcframework */,
+				4FA655522E3F45C100AAC704 /* AlchemistService.xcframework */,
 				4F5EA2B42E3A529700061EAF /* FrontBoardServices.framework */,
 				4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */,
 				4FBDBCA82E2E4E4600CDAF27 /* UIKit.framework */,
@@ -129,6 +145,7 @@
 				TargetAttributes = {
 					4F82BFC12E2BB5ED00216AEA = {
 						CreatedOnToolsVersion = 26.0;
+						LastSwiftMigration = 2600;
 					};
 				};
 			};
@@ -177,6 +194,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = P53D29U9LJ;
@@ -203,6 +221,9 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MyRE/MyRE-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 7;
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
@@ -213,6 +234,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = P53D29U9LJ;
@@ -239,6 +261,8 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MyRE/MyRE-Bridging-Header.h";
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 7;
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};

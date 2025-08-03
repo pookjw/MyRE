@@ -1,0 +1,5 @@
+framework module AlchemistBase {
+    umbrella header "AlchemistBase.h"
+    export *
+    module * { export * }
+}

@@ -1,0 +1,5 @@
+framework module MXI {
+    umbrella header "MXI.h"
+    export *
+    module * { export * }
+}

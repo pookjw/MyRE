@@ -8,6 +8,7 @@
 #import "AppDelegate.h"
 #import "SceneDelegate.h"
 #import "LayerSceneDelegate.h"
+#import "MyRE-Swift.h"
 
 @interface AppDelegate ()
 @end
@@ -15,6 +16,7 @@
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    foo();
     return YES;
 }
 

@@ -12,6 +12,7 @@
 #import "VideoPlayerViewController.h"
 #import "VideoRendererViewController.h"
 #import "ImagePresentationViewController.h"
+#import "Spatial3DImageViewController.h"
 
 @interface ClassesViewController ()
 @property (class, nonatomic, readonly, getter=_classes) NSArray<Class> *classes;
@@ -23,6 +24,7 @@
 
 + (NSArray<Class> *)_classes {
     return @[
+        [Spatial3DImageViewController class],
         [ImagePresentationViewController class],
         [VideoRendererViewController class],
         [VideoPlayerViewController class],

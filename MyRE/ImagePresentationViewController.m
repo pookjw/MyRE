@@ -24,7 +24,7 @@
     
     struct REComponent *transformComponent = REEntityGetOrAddComponentByClass(customEntity, RETransformComponentGetComponentType());
     RETransformComponentSetWorldPosition(transformComponent, simd_make_float3(0.f, 0.f, 0.1f));
-    RETransformComponentSetLocalScale(transformComponent, simd_make_float3(0.2f, 0.2f, 0.2f));
+    RETransformComponentSetLocalScale(transformComponent, simd_make_float3(0.5f, 0.5f, 0.5f));
     
     struct REComponent *imagePresentationComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationComponentGetComponentType());
     REImagePresentationComponentSetScreenHeight(imagePresentationComponent, 1.f);
@@ -33,13 +33,13 @@
     REImagePresentationComponentSetLoadingImageTextureAsset(imagePresentationComponent, NULL);
     REImagePresentationComponentSetStereoBaseline(imagePresentationComponent, 19.272f);
     REImagePresentationComponentSetDisparityAdjustment(imagePresentationComponent, 0.024f);
-    REImagePresentationComponentSetHorizontalFOV(imagePresentationComponent, 68.5f);
+    REImagePresentationComponentSetHorizontalFOV(imagePresentationComponent, 68.5013f);
     REImagePresentationComponentSetShouldLockMeshToImageAspectRatio(imagePresentationComponent, YES);
     REImagePresentationComponentSetCornerRadiusInPoints(imagePresentationComponent, 46.f);
     REImagePresentationComponentSetSpatial3DCollapseStrength(imagePresentationComponent, 0.f);
     REImagePresentationComponentSetEnableSpecularAndFresnelEffects(imagePresentationComponent, YES);
-    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 0.f);
-    REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 0.f);
+    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 2);
+    REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 2);
     
     struct REComponent *imagePresentationStatusComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationStatusComponentGetComponentType());
     
@@ -51,7 +51,7 @@
     REImagePresentationComponentSetSpatial3DImage(imagePresentationComponent, NULL);
     REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
     
-    NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image" withExtension:UTTypeHEIC.preferredFilenameExtension];
+    NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image_1" withExtension:UTTypeHEIC.preferredFilenameExtension];
     assert(url != nil);
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((CFURLRef)url, NULL);
     size_t count = CGImageSourceGetCount(imageSource);
@@ -116,6 +116,7 @@
         
         struct REAsset *stereoAsset = [self newStereoTextureAssetWithImageSource:imageSource leftIndex:leftImageIndex rightIndex:rightImageIndex];
         REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, stereoAsset);
+        REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, YES);
         RERelease(stereoAsset);
     } else {
         abort();

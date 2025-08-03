@@ -33,7 +33,7 @@ struct ImagePresentationView: View {
     var body: some View {
         RealityView { content in
             content.add(entity)
-//            entity.transform.scale = .init(x: 0.2, y: 0.2, z: 0.2)
+            entity.transform.scale = .init(x: 0.5, y: 0.5, z: 0.5)
         } update: { content in
             if let component {
                 entity.components.set(component)
@@ -43,7 +43,6 @@ struct ImagePresentationView: View {
             let url = Bundle.main.url(forResource: "spatial_image", withExtension: UTType.heic.preferredFilenameExtension)!
             component = try? await ImagePresentationComponent.init(contentsOf: url)
             component?.screenHeight = 0.5
-            print("")
         }
 
     }
