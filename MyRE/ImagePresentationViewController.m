@@ -13,6 +13,7 @@
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import "MyRE-Swift.h"
 #import <MXI/MXI.h>
+#include <TargetConditionals.h>
 
 @implementation ImagePresentationViewController
 
@@ -40,7 +41,17 @@
     REImagePresentationComponentSetCornerRadiusInPoints(imagePresentationComponent, 46.f);
     REImagePresentationComponentSetSpatial3DCollapseStrength(imagePresentationComponent, 0.f);
     REImagePresentationComponentSetEnableSpecularAndFresnelEffects(imagePresentationComponent, YES);
-    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 1);
+    /*
+     mono
+     spatialStereo
+     spatial3D
+     */
+    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 2);
+    /*
+     Mono
+     Portal
+     Immersive
+     */
     REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 1);
     
     struct REComponent *imagePresentationStatusComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationStatusComponentGetComponentType());
@@ -53,7 +64,8 @@
     REImagePresentationComponentSetSpatial3DImage(imagePresentationComponent, NULL);
     REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
     
-    NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image_1" withExtension:UTTypeHEIC.preferredFilenameExtension];
+//    NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image_1" withExtension:UTTypeHEIC.preferredFilenameExtension];
+    NSURL *url = [NSBundle.mainBundle URLForResource:@"image_1" withExtension:UTTypeJPEG.preferredFilenameExtension];
     assert(url != nil);
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((CFURLRef)url, NULL);
     size_t count = CGImageSourceGetCount(imageSource);
@@ -75,6 +87,61 @@
             struct REAsset *monoAsset = [self newMonoTextureAssetWithImageSource:imageSource index:primaryImageIndex];
             REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, monoAsset);
             RERelease(monoAsset);
+            
+            //
+            
+#if !TARGET_OS_SIMULATOR
+            REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, YES);
+            
+            CGImageRef cgImage = CGImageSourceCreateImageAtIndex(imageSource, primaryImageIndex, (CFDictionaryRef)@{
+                (id)kCGImageSourceDecodeRequest: (id)kCGImageSourceDecodeToSDR,
+                @"kCGImageSourceShouldUseRawDataForFullSize": @YES
+            });
+            CIImage *ciImage = [[CIImage alloc] initWithCGImage:cgImage];
+            mxiSceneFromCIImage(ciImage, ^(MXIScene * _Nonnull scene) {
+                REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
+                
+                {
+                    struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTexture, (CFDictionaryRef)@{
+                        (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+                    });
+                    struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
+                    RERelease(colorTextureAssetData);
+                    REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
+                    RERelease(colorTexture);
+                }
+                
+                {
+                    NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
+                    CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
+                    for (id<MTLTexture> texture in colorTextures) {
+                        struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
+                            (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+                        });
+                        struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
+                        CFArrayAppendValue(textures, colorTexture);
+                        RERelease(data);
+                    }
+                    
+                    REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, textures);
+                    CFRelease(textures);
+                }
+                
+                REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
+                REImagePresentationComponentSetMXIAspectRatio(imagePresentationComponent, scene.aspectRatio);
+                REImagePresentationComponentSetMXILayerCount(imagePresentationComponent, scene.numLayers);
+                REImagePresentationComponentSetMXIResolutionWidth(imagePresentationComponent, scene.resolutionWidth);
+                REImagePresentationComponentSetMXIResolutionHeight(imagePresentationComponent, scene.resolutionHeight);
+                REImagePresentationComponentSetMXINearDistance(imagePresentationComponent, scene.depthRange.near);
+                REImagePresentationComponentSetMXIFarDistance(imagePresentationComponent, scene.depthRange.far);
+                REImagePresentationComponentSetMXIPremultipliedAlpha(imagePresentationComponent, scene.isPremultipliedAlpha);
+                
+                NSLog(@"Done!");
+            });
+#endif
+            
+            //
+            
             CFRelease(imageSource);
             return;
         }
@@ -117,52 +184,11 @@
         RERelease(monoAsset);
         
         struct REAsset *stereoAsset = [self newStereoTextureAssetWithImageSource:imageSource leftIndex:leftImageIndex rightIndex:rightImageIndex];
-        REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, stereoAsset);
+        REImagePresentationComponentSetStereoImageTextureAsset(imagePresentationComponent, stereoAsset);
         REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
         RERelease(stereoAsset);
         
         RENetworkMarkComponentDirty(imagePresentationComponent);
-        
-        //
-        
-        CGImageRef cgImage = CGImageSourceCreateImageAtIndex(imageSource, monoscopicImageIndex, (CFDictionaryRef)@{
-            (id)kCGImageSourceDecodeRequest: (id)kCGImageSourceDecodeToSDR,
-            @"kCGImageSourceShouldUseRawDataForFullSize": @YES
-        });
-        CIImage *ciImage = [[CIImage alloc] initWithCGImage:cgImage];
-        mxiSceneFromCIImage(ciImage, ^(MXIScene * _Nonnull scene) {
-            {
-                struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTexture, (CFDictionaryRef)@{
-                    (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
-                });
-                struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
-                RERelease(colorTextureAssetData);
-                REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
-                RERelease(colorTexture);
-            }
-            
-            {
-                NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
-                CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
-                for (id<MTLTexture> texture in colorTextures) {
-                    struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
-                        (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
-                    });
-                    struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
-                    CFArrayAppendValue(textures, colorTexture);
-                    RERelease(data);
-                }
-                
-                REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, textures);
-                CFRelease(textures);
-            }
-            
-            REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
-            REImagePresentationComponentSetMXIAspectRatio(imagePresentationComponent, scene.aspectRatio);
-            REImagePresentationComponentSetMXILayerCount(imagePresentationComponent, scene.numLayers);
-            
-            NSLog(@"Done!");
-        });
     } else {
         abort();
     }
@@ -238,3 +264,126 @@
 }
 
 @end
+
+/*
+ _triangleIndices
+ _triangleSliceIndices
+ _vertexPositions
+ _vertexUVs
+ 
+ static RealityFoundation.MXISceneResource.createLowLevelMesh(mxiScene: __C.MXIScene) throws -> RealityFoundation.LowLevelMesh
+ 
+ REAssetManagerCreateMeshAssetWithDirectMesh
+ */
+
+/*
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.110
+    frame #0: 0x00000001d5854774 CoreRE`REMeshAttributesDescriptorCreate
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.91
+    frame #0: 0x00000001d5854a40 CoreRE`REMeshAttributeDescriptorArraySetCustomName
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.163
+    frame #0: 0x00000001d585515c CoreRE`REMeshDefinitionCreateWithAttributes
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.162
+    frame #0: 0x00000001d5855164 CoreRE`REMeshDefinitionCreateInstancedWithAttributes
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.168
+    frame #0: 0x00000001d58552c0 CoreRE`REMeshDefinitionSetIndicesWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.164
+    frame #0: 0x00000001d58555e0 CoreRE`REMeshDefinitionSetAttributeWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.166
+    frame #0: 0x00000001d585563c CoreRE`REMeshDefinitionSetCustomAttributeWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.110
+    frame #0: 0x00000001d5854774 CoreRE`REMeshAttributesDescriptorCreate
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.91
+    frame #0: 0x00000001d5854a40 CoreRE`REMeshAttributeDescriptorArraySetCustomName
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.163
+    frame #0: 0x00000001d585515c CoreRE`REMeshDefinitionCreateWithAttributes
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.162
+    frame #0: 0x00000001d5855164 CoreRE`REMeshDefinitionCreateInstancedWithAttributes
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.168
+    frame #0: 0x00000001d58552c0 CoreRE`REMeshDefinitionSetIndicesWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.164
+    frame #0: 0x00000001d58555e0 CoreRE`REMeshDefinitionSetAttributeWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.166
+    frame #0: 0x00000001d585563c CoreRE`REMeshDefinitionSetCustomAttributeWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.110
+    frame #0: 0x00000001d5854774 CoreRE`REMeshAttributesDescriptorCreate
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.91
+    frame #0: 0x00000001d5854a40 CoreRE`REMeshAttributeDescriptorArraySetCustomName
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.163
+    frame #0: 0x00000001d585515c CoreRE`REMeshDefinitionCreateWithAttributes
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.162
+    frame #0: 0x00000001d5855164 CoreRE`REMeshDefinitionCreateInstancedWithAttributes
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.168
+    frame #0: 0x00000001d58552c0 CoreRE`REMeshDefinitionSetIndicesWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.164
+    frame #0: 0x00000001d58555e0 CoreRE`REMeshDefinitionSetAttributeWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.166
+    frame #0: 0x00000001d585563c CoreRE`REMeshDefinitionSetCustomAttributeWithData
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.134
+    frame #0: 0x00000001d58f1ff4 CoreRE`REMeshComponentGetComponentType
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.134
+    frame #0: 0x00000001d58f1ff4 CoreRE`REMeshComponentGetComponentType
+ bt 1
+* thread #10, name = 'Task 1', stop reason = breakpoint 4.134
+    frame #0: 0x00000001d58f1ff4 CoreRE`REMeshComponentGetComponentType
+ 
+ bt 1
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.5
+    frame #0: 0x00000001d58da444 CoreRE`REImagePresentationComponentSetMXIMeshAsset
+ bt 1✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.10
+    frame #0: 0x00000001d58da1c0 CoreRE`REImagePresentationComponentSetMXITextureAsset
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.11
+    frame #0: 0x00000001d58da2e4 CoreRE`REImagePresentationComponentSetMXITextureAssets
+ bt 1✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.2
+    frame #0: 0x00000001d58da3bc CoreRE`REImagePresentationComponentSetMXIBackgroundTextureAsset
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.12
+    frame #0: 0x00000001d58da510 CoreRE`REImagePresentationComponentSetMXIVerticalFOV
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.1
+    frame #0: 0x00000001d58da558 CoreRE`REImagePresentationComponentSetMXIAspectRatio
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.6
+    frame #0: 0x00000001d58da584 CoreRE`REImagePresentationComponentSetMXINearDistance
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.3
+    frame #0: 0x00000001d58da5cc CoreRE`REImagePresentationComponentSetMXIFarDistance
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.4
+    frame #0: 0x00000001d58da614 CoreRE`REImagePresentationComponentSetMXILayerCount
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.9
+    frame #0: 0x00000001d58da65c CoreRE`REImagePresentationComponentSetMXIResolutionWidth
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.8
+    frame #0: 0x00000001d58da6a4 CoreRE`REImagePresentationComponentSetMXIResolutionHeight
+ bt 1 ✅
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.7
+    frame #0: 0x00000001d58da6ec CoreRE`REImagePresentationComponentSetMXIPremultipliedAlpha
+ */

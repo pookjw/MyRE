@@ -12,6 +12,7 @@
 #import <UIKitPrivate/UIKitPrivate.h>
 #import <MRUIKit/MRUIKit.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#include <TargetConditionals.h>
 
 @interface Spatial3DImageViewController ()
 
@@ -22,6 +23,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+#if !TARGET_OS_SIMULATOR
     NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image_1" withExtension:UTTypeHEIC.preferredFilenameExtension];
     assert(url != nil);
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((CFURLRef)url, NULL);
@@ -49,6 +51,7 @@
             NSLog(@"%@", scene); 
         });
     }
+#endif
 }
 
 @end

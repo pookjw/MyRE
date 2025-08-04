@@ -222,7 +222,13 @@ exports:
     _REImagePresentationComponentSetMXIAspectRatio,
     _REImagePresentationComponentSetMXILayerCount,
     _kRETextureAssetCreateOptionSemantic,
-    _kRETextureAssetCreateSemanticColor ]
+    _kRETextureAssetCreateSemanticColor,
+    _REImagePresentationComponentSetMXIPremultipliedAlpha,
+    _REImagePresentationComponentSetMXIResolutionWidth,
+    _REImagePresentationComponentSetMXIResolutionHeight,
+    _REImagePresentationComponentSetMXINearDistance,
+    _REImagePresentationComponentSetMXIFarDistance,
+    _REImagePresentationComponentSetMXITextureAsset ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

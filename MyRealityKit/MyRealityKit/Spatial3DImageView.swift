@@ -23,7 +23,7 @@ struct Spatial3DImageView: View {
             }
         }
         .task {
-            let url = Bundle.main.url(forResource: "spatial_image", withExtension: UTType.heic.preferredFilenameExtension)!
+            let url = Bundle.main.url(forResource: "image_1", withExtension: UTType.jpeg.preferredFilenameExtension)!
             let spatial3DImage = try! await ImagePresentationComponent.Spatial3DImage(contentsOf: url)
             try! await spatial3DImage.generate()
             

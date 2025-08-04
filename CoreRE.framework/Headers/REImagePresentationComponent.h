@@ -33,5 +33,11 @@ RE_EXTERN void REImagePresentationComponentSetMXIBackgroundTextureAsset(struct R
 RE_EXTERN void REImagePresentationComponentSetMXIVerticalFOV(struct REComponent *component, float verticalFOV);
 RE_EXTERN void REImagePresentationComponentSetMXIAspectRatio(struct REComponent *component, float aspectRatio);
 RE_EXTERN void REImagePresentationComponentSetMXILayerCount(struct REComponent *component, unsigned int layerCount);
+RE_EXTERN void REImagePresentationComponentSetMXIPremultipliedAlpha(struct REComponent *component, BOOL enabled);
+RE_EXTERN void REImagePresentationComponentSetMXIResolutionWidth(struct REComponent *component, unsigned int width);
+RE_EXTERN void REImagePresentationComponentSetMXIResolutionHeight(struct REComponent *component, unsigned int height);
+RE_EXTERN void REImagePresentationComponentSetMXINearDistance(struct REComponent *component, float nearDistance);
+RE_EXTERN void REImagePresentationComponentSetMXIFarDistance(struct REComponent *component, float farDistance);
+RE_EXTERN void REImagePresentationComponentSetMXITextureAsset(struct REComponent *component, struct REAsset * _Nullable textureAsset);
 
 NS_ASSUME_NONNULL_END
