@@ -213,7 +213,16 @@ exports:
     _REEntityGetSwiftObject,
     _REAssetLoadRequestWaitForCompletion,
     _REAssetLoadRequestWaitForCompletionFromOtherQueue,
-    _REAssetLoadRequestCopyError ]
+    _REAssetLoadRequestCopyError,
+    _RETextureAssetDataCreateWithTexture,
+    _REAssetManagerCreateTextureAssetFromData,
+    _REImagePresentationComponentSetMXITextureAssets,
+    _REImagePresentationComponentSetMXIBackgroundTextureAsset,
+    _REImagePresentationComponentSetMXIVerticalFOV,
+    _REImagePresentationComponentSetMXIAspectRatio,
+    _REImagePresentationComponentSetMXILayerCount,
+    _kRETextureAssetCreateOptionSemantic,
+    _kRETextureAssetCreateSemanticColor ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

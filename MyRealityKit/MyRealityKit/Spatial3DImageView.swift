@@ -51,3 +51,7 @@ struct Spatial3DImageView: View {
  -[MXISceneBuilder buildSceneWithOptions error:]
  MXIScene - (id) initWithPosition:(const void*)arg1 uvs:(const void*)arg2 triangles:(const void*)arg3 slices:(const void*)arg4 colorTextures:(id)arg5 colorTexture:(id)arg6 colorTextureSlices:(unsigned int)arg7 normalTexture:(id)arg8 pbrTextures:(id)arg9 pbrMaterialDescriptor:(id)arg10 iblFileName:(id)arg11;
  */
+
+/*
+ 0x1117b0200 (MXIScene)
+ */

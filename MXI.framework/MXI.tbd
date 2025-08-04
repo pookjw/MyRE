@@ -5,7 +5,7 @@ install-name:    '/System/Library/PrivateFrameworks/MXI.framework/MXI'
 swift-abi-version: 7
 exports:
   - targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
-    symbols:              [  ]
+    symbols:              [ _OBJC_CLASS_$_MXIScene ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

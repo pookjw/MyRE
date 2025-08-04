@@ -43,6 +43,7 @@ struct ImagePresentationView: View {
             let url = Bundle.main.url(forResource: "spatial_image", withExtension: UTType.heic.preferredFilenameExtension)!
             component = try? await ImagePresentationComponent.init(contentsOf: url)
             component?.screenHeight = 0.5
+            component?.desiredViewingMode = .spatialStereo
         }
 
     }

@@ -28,5 +28,10 @@ RE_EXTERN void REImagePresentationComponentSetDesiredImmersiveViewingMode(struct
 RE_EXTERN struct RESpatial3DImage * _Nullable REImagePresentationComponentGetSpatial3DImage(struct REComponent *component);
 RE_EXTERN void REImagePresentationComponentSetSpatial3DImage(struct REComponent *component, struct RESpatial3DImage * _Nullable spatial3DImage);
 RE_EXTERN void REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(struct REComponent *component, BOOL hasGeneratedContent);
+RE_EXTERN void REImagePresentationComponentSetMXITextureAssets(struct REComponent *component, CFArrayRef textureAssets);
+RE_EXTERN void REImagePresentationComponentSetMXIBackgroundTextureAsset(struct REComponent *component, struct REAsset * _Nullable backgroundTextureAsset);
+RE_EXTERN void REImagePresentationComponentSetMXIVerticalFOV(struct REComponent *component, float verticalFOV);
+RE_EXTERN void REImagePresentationComponentSetMXIAspectRatio(struct REComponent *component, float aspectRatio);
+RE_EXTERN void REImagePresentationComponentSetMXILayerCount(struct REComponent *component, unsigned int layerCount);
 
 NS_ASSUME_NONNULL_END

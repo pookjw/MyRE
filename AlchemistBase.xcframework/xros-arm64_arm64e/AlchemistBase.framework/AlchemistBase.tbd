@@ -5,7 +5,8 @@ install-name:    '/System/Library/PrivateFrameworks/AlchemistBase.framework/Alch
 swift-abi-version: 7
 exports:
   - targets:         [ arm64-xros, arm64e-xros ]
-    symbols:              [  ]
+    symbols:              [ _$s13AlchemistBase16AdjustmentParamsVMa,
+    _$s13AlchemistBase16AdjustmentParamsVACycfC ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

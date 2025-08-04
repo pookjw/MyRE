@@ -6,42 +6,33 @@
 //
 
 #if !targetEnvironment(simulator)
-import MXI
+@preconcurrency import MXI
 @preconcurrency import AlchemistService
 import Metal
 import CoreRE3DGSFoundation
+@preconcurrency import ImageIO
+import UIKit
 
-/*
- async function pointer to dispatch thunk of AlchemistService.ALCService.generate(from: __C.CIImage, with: AlchemistService.ALCConfiguration, options: Swift.Optional<Swift.Dictionary<AlchemistService.ALCService.GenerationOption, Any>>) async throws -> __C.MXIScene
- */
-
-@_cdecl("foo")
-func foo() {
-//    AlchemistService.ALCService.init(mtlDevice: MTLCreateSystemDefaultDevice()!)
-//    AlchemistService.ALCConfiguration.init()
+@_cdecl("mxiSceneFromCIImage")
+func mxiSceneFromCIImage(_ ciImage: CIImage, completionHandler: @escaping @Sendable (MXIScene) -> Void) {
     var configuration = AlchemistService.ALCConfiguration()
     configuration.bakingOptions.enableRefinement = true
-//    configuration.bakingOptions.type = .scene
-    configuration.bakingOptions.set(type: .scene)
-//    configuration.sorterOptions.sortingMode = .none
+    configuration.bakingOptions.set(type: .plane)
     
-    let service = try! AlchemistService.ALCService.init(mtlDevice: MTLCreateSystemDefaultDevice()!, configuration: configuration, eventHandler: { _, _ in
-        fatalError()
+    let service = try! AlchemistService.ALCService.init(mtlDevice: MTLCreateSystemDefaultDevice()!, configuration: configuration, eventHandler: { event, output in
         return true
     })
     
     Task {
-//        let options = [
-//            ALCService.GenerationOption.clientName
-//        ]
-//        let scene = try await service.generate(from: <#T##CGImage#>, with: <#T##ALCConfiguration#>, options: <#T##Optional<Dictionary<ALCService.GenerationOption, Any>>#>)
+        let options: [ALCService.GenerationOption : Any] = [
+            ALCService.GenerationOption.clientName: ALCService.ClientName.realityKit,
+            ALCService.GenerationOption.focalLengthPx: 24.0,
+            ALCService.GenerationOption.adjustmentParams: AdjustmentParams()
+        ]
+        
+        let scene = try! await service.generate(from: ciImage, with: configuration, options: options)
+        completionHandler(scene)
     }
-//    print(AlchemistService.ALCService.self)
 }
 
 #endif
-
-/*
- AlchemistService.ALCConfiguration.bakingOptions.modify : AlchemistService.ALCBakingOptions
- AlchemistService.ALCConfiguration.backingOptions.modify : AlchemistService.ALCBakingOptions
- */

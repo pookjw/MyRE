@@ -5,12 +5,13 @@
 @_exported import Metal
 @_exported import MXI
 @_exported import CoreRE3DGSFoundation
-@_exported import CoreGraphics
+@_exported import CoreImage
+@_exported import AlchemistBase
 @_exported import _Concurrency
 
-public final class ALCService {
-    @_silgen_name("$s16AlchemistService10ALCServiceC9mtlDevice13configuration12eventHandlerACSo9MTLDevice_p_AA16ALCConfigurationVSbAC15GenerationEventO_AA21ALCIntermediateOutput_pSgtcSgtKcfc")
-    public init(mtlDevice: Metal.MTLDevice, configuration: AlchemistService.ALCConfiguration, eventHandler: (AlchemistService.ALCService.GenerationEvent, AlchemistService.ALCIntermediateOutput?) -> Swift.Bool?) throws
+public actor ALCService {
+    @_silgen_name("$s16AlchemistService10ALCServiceC9mtlDevice13configuration12eventHandlerACSo9MTLDevice_p_AA16ALCConfigurationVSbAC15GenerationEventO_AA21ALCIntermediateOutput_pSgtcSgtKcfC")
+    public init(mtlDevice: Metal.MTLDevice, configuration: AlchemistService.ALCConfiguration, eventHandler: Swift.Optional<(AlchemistService.ALCService.GenerationEvent, Swift.Optional<AlchemistService.ALCIntermediateOutput>) -> Swift.Bool>) throws
 
     public enum GenerationEvent {
         case failed
@@ -25,8 +26,15 @@ public final class ALCService {
         case adjustmentParams
     }
 
-    @_silgen_name("$s16AlchemistService10ALCServiceC8generate4from4with7optionsSo8MXISceneCSo7CIImageC_AA16ALCConfigurationVSDyAC16GenerationOptionOypGSgtYaKFTjTu")
-    public func generate(from: CoreGraphics.CGImage, with: AlchemistService.ALCConfiguration, options: Swift.Optional<Swift.Dictionary<AlchemistService.ALCService.GenerationOption, Any>>) async throws -> MXI.MXIScene
+    public enum ClientName {
+        case photosApp
+        case mediaAnalysis
+        case realityKit
+        case commandLine
+        case unknown
+    }
+
+    public func generate(from: CoreImage.CIImage, with: AlchemistService.ALCConfiguration, options: [AlchemistService.ALCService.GenerationOption : Any]?) async throws -> MXI.MXIScene
 }
 
 public struct ALCConfiguration {

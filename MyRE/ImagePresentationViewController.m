@@ -11,6 +11,8 @@
 #import <UIKitPrivate/UIKitPrivate.h>
 #import <MRUIKit/MRUIKit.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#import "MyRE-Swift.h"
+#import <MXI/MXI.h>
 
 @implementation ImagePresentationViewController
 
@@ -38,8 +40,8 @@
     REImagePresentationComponentSetCornerRadiusInPoints(imagePresentationComponent, 46.f);
     REImagePresentationComponentSetSpatial3DCollapseStrength(imagePresentationComponent, 0.f);
     REImagePresentationComponentSetEnableSpecularAndFresnelEffects(imagePresentationComponent, YES);
-    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 2);
-    REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 2);
+    REImagePresentationComponentSetDesiredViewingMode(imagePresentationComponent, 1);
+    REImagePresentationComponentSetDesiredImmersiveViewingMode(imagePresentationComponent, 1);
     
     struct REComponent *imagePresentationStatusComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationStatusComponentGetComponentType());
     
@@ -68,9 +70,8 @@
             }
         }
         
-        unsigned int primaryImageIndex = (unsigned int)CGImageSourceGetPrimaryImageIndex(imageSource);
-        
         if (stereoPairGroup == nil) {
+            unsigned int primaryImageIndex = (unsigned int)CGImageSourceGetPrimaryImageIndex(imageSource);
             struct REAsset *monoAsset = [self newMonoTextureAssetWithImageSource:imageSource index:primaryImageIndex];
             REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, monoAsset);
             RERelease(monoAsset);
@@ -78,6 +79,7 @@
             return;
         }
         
+        unsigned int monoscopicImageIndex = ((NSNumber *)[stereoPairGroup objectForKey:(id)kCGImagePropertyGroupImageIndexMonoscopic]).unsignedIntValue;
         unsigned int leftImageIndex = ((NSNumber *)[stereoPairGroup objectForKey:(id)kCGImagePropertyGroupImageIndexLeft]).unsignedIntValue;
         unsigned int rightImageIndex = ((NSNumber *)[stereoPairGroup objectForKey:(id)kCGImagePropertyGroupImageIndexRight]).unsignedIntValue;
         
@@ -92,7 +94,7 @@
         for (NSDictionary *image in images) {
             NSNumber *imageIndex = [image objectForKey:(id)kCGImagePropertyImageIndex];
             assert(imageIndex != nil);
-            if (imageIndex.unsignedIntValue == primaryImageIndex) {
+            if (imageIndex.unsignedIntValue == monoscopicImageIndex) {
                 primaryImage = image;
             } else if (imageIndex.unsignedIntValue == leftImageIndex) {
                 leftImage = image;
@@ -110,14 +112,57 @@
         REImagePresentationComponentSetMonoImageOrientation(imagePresentationComponent, monoOrientation);
         REImagePresentationComponentSetStereoImageOrientation(imagePresentationComponent, stereoOrientation);
         
-        struct REAsset *monoAsset = [self newMonoTextureAssetWithImageSource:imageSource index:primaryImageIndex];
+        struct REAsset *monoAsset = [self newMonoTextureAssetWithImageSource:imageSource index:monoscopicImageIndex];
         REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, monoAsset);
         RERelease(monoAsset);
         
         struct REAsset *stereoAsset = [self newStereoTextureAssetWithImageSource:imageSource leftIndex:leftImageIndex rightIndex:rightImageIndex];
         REImagePresentationComponentSetMonoImageTextureAsset(imagePresentationComponent, stereoAsset);
-        REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, YES);
+        REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
         RERelease(stereoAsset);
+        
+        RENetworkMarkComponentDirty(imagePresentationComponent);
+        
+        //
+        
+        CGImageRef cgImage = CGImageSourceCreateImageAtIndex(imageSource, monoscopicImageIndex, (CFDictionaryRef)@{
+            (id)kCGImageSourceDecodeRequest: (id)kCGImageSourceDecodeToSDR,
+            @"kCGImageSourceShouldUseRawDataForFullSize": @YES
+        });
+        CIImage *ciImage = [[CIImage alloc] initWithCGImage:cgImage];
+        mxiSceneFromCIImage(ciImage, ^(MXIScene * _Nonnull scene) {
+            {
+                struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTexture, (CFDictionaryRef)@{
+                    (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+                });
+                struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
+                RERelease(colorTextureAssetData);
+                REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
+                RERelease(colorTexture);
+            }
+            
+            {
+                NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
+                CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
+                for (id<MTLTexture> texture in colorTextures) {
+                    struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
+                        (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+                    });
+                    struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
+                    CFArrayAppendValue(textures, colorTexture);
+                    RERelease(data);
+                }
+                
+                REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, textures);
+                CFRelease(textures);
+            }
+            
+            REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
+            REImagePresentationComponentSetMXIAspectRatio(imagePresentationComponent, scene.aspectRatio);
+            REImagePresentationComponentSetMXILayerCount(imagePresentationComponent, scene.numLayers);
+            
+            NSLog(@"Done!");
+        });
     } else {
         abort();
     }

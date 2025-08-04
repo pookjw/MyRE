@@ -1,8 +1,13 @@
+#import <CoreFoundation/CoreFoundation.h>
+
 #ifdef __cplusplus
 #define RE_EXTERN       extern "C"
 #else
 #define RE_EXTERN           extern
 #endif
+
+RE_EXTERN CFStringRef const kRETextureAssetCreateOptionSemantic;
+RE_EXTERN CFStringRef const kRETextureAssetCreateSemanticColor;
 
 struct REEntity {};
 
@@ -53,3 +58,5 @@ struct RETextureImportOperation {};
 struct REAssetLoadRequest {};
 
 struct RESpatial3DImage {};
+
+struct RETextureAssetData {};

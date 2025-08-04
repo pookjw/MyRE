@@ -58,8 +58,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    Class _class = ClassesViewController.classes.firstObject;
-//    Class _class = [VideoPlayerViewController class];
+//    Class _class = ClassesViewController.classes.firstObject;
+    Class _class = [ImagePresentationViewController class];
     __kindof UIViewController *viewController = [[_class alloc] init];
     [self.navigationController pushViewController:viewController animated:YES];
     [viewController release];

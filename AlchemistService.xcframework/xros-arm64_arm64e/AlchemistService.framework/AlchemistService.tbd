@@ -6,8 +6,11 @@ swift-abi-version: 7
 exports:
   - targets:         [ arm64-xros, arm64e-xros ]
     symbols:              [ _$s16AlchemistService10ALCServiceC9mtlDevice13configuration12eventHandlerACSo9MTLDevice_p_AA16ALCConfigurationVSbAC15GenerationEventO_AA21ALCIntermediateOutput_pSgtcSgtKcfc,
+    _$s16AlchemistService10ALCServiceC9mtlDevice13configuration12eventHandlerACSo9MTLDevice_p_AA16ALCConfigurationVSbAC15GenerationEventO_AA21ALCIntermediateOutput_pSgtcSgtKcfC,
     _$s16AlchemistService10ALCServiceCMa,
+    _$s16AlchemistService10ALCServiceCMn,
     _$s16AlchemistService16ALCConfigurationVMa,
+    _$s16AlchemistService16ALCConfigurationVMn,
     _$s16AlchemistService16ALCConfigurationVACycfC,
     _$s16AlchemistService16ALCConfigurationV13bakingOptionsAA09ALCBakingE0VvM,
     _$s16AlchemistService16ALCConfigurationV13sorterOptionsAA09ALCSorterE0VvM,
@@ -20,6 +23,20 @@ exports:
     _$s16AlchemistService10ALCServiceC15GenerationEventO8progressyAESu_SutcAEmFWC,
     _$s16AlchemistService10ALCServiceC15GenerationEventO8startingyA2EmFWC,
     _$s16AlchemistService10ALCServiceC8generate4from4with7optionsSo8MXISceneCSo7CIImageC_AA16ALCConfigurationVSDyAC16GenerationOptionOypGSgtYaKFTjTu,
+    _$s16AlchemistService10ALCServiceC10ClientNameOMa,
+    _$s16AlchemistService10ALCServiceC10ClientNameOMn,
+    _$s16AlchemistService10ALCServiceC10ClientNameO9photosAppyA2EmFWC,
+    _$s16AlchemistService10ALCServiceC10ClientNameO13mediaAnalysisyA2EmFWC,
+    _$s16AlchemistService10ALCServiceC10ClientNameO10realityKityA2EmFWC,
+    _$s16AlchemistService10ALCServiceC10ClientNameO11commandLineyA2EmFWC,
+    _$s16AlchemistService10ALCServiceC10ClientNameO7unknownyA2EmFWC,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionOSHAAMc,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionOSQAAMc,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionOMa,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionOMn,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionO10clientNameyA2EmFWC,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionO13focalLengthPxyA2EmFWC,
+    _$s16AlchemistService10ALCServiceC16GenerationOptionO16adjustmentParamsyA2EmFWC
     ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
