@@ -39,5 +39,6 @@ RE_EXTERN void REImagePresentationComponentSetMXIResolutionHeight(struct RECompo
 RE_EXTERN void REImagePresentationComponentSetMXINearDistance(struct REComponent *component, float nearDistance);
 RE_EXTERN void REImagePresentationComponentSetMXIFarDistance(struct REComponent *component, float farDistance);
 RE_EXTERN void REImagePresentationComponentSetMXITextureAsset(struct REComponent *component, struct REAsset * _Nullable textureAsset);
+RE_EXTERN void REImagePresentationComponentSetMXIMeshAsset(struct REComponent *component, struct REAsset * _Nullable meshAsset);
 
 NS_ASSUME_NONNULL_END

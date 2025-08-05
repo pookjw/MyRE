@@ -15,6 +15,7 @@
 		4FA658762E3FBEEF00AAC704 /* CoreRE3DGSFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */; };
 		4FA65EB32E40D63300AAC704 /* AlchemistBase.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA655512E3F45C100AAC704 /* AlchemistBase.xcframework */; };
 		4FA65EB42E40D63700AAC704 /* AlchemistService.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA655522E3F45C100AAC704 /* AlchemistService.xcframework */; };
+		4FA65EB62E41F95100AAC704 /* DirectResource.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FA65EB52E41F95100AAC704 /* DirectResource.framework */; };
 		4FBDBCA52E2E4E3700CDAF27 /* UIKitPrivate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBDBCA42E2E4E3700CDAF27 /* UIKitPrivate.framework */; };
 		4FBDBCA92E2E4E4600CDAF27 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBDBCA82E2E4E4600CDAF27 /* UIKit.framework */; };
 /* End PBXBuildFile section */
@@ -29,6 +30,7 @@
 		4FA655522E3F45C100AAC704 /* AlchemistService.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = AlchemistService.xcframework; sourceTree = "<group>"; };
 		4FA656572E3FB7DF00AAC704 /* MXI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MXI.framework; sourceTree = "<group>"; };
 		4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = folder; path = CoreRE3DGSFoundation.framework; sourceTree = "<group>"; };
+		4FA65EB52E41F95100AAC704 /* DirectResource.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DirectResource.framework; sourceTree = "<group>"; };
 		4FBDBCA42E2E4E3700CDAF27 /* UIKitPrivate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = UIKitPrivate.framework; sourceTree = "<group>"; };
 		4FBDBCA82E2E4E4600CDAF27 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -61,6 +63,7 @@
 			files = (
 				4FA658762E3FBEEF00AAC704 /* CoreRE3DGSFoundation.framework in Frameworks */,
 				4FBDBCA92E2E4E4600CDAF27 /* UIKit.framework in Frameworks */,
+				4FA65EB62E41F95100AAC704 /* DirectResource.framework in Frameworks */,
 				4FA6565B2E3FB8C400AAC704 /* MXI.framework in Frameworks */,
 				4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */,
 				4F82C0162E2BBAEA00216AEA /* MRUIKit.framework in Frameworks */,
@@ -95,6 +98,7 @@
 		4F82BFDF2E2BB7F800216AEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4FA65EB52E41F95100AAC704 /* DirectResource.framework */,
 				4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */,
 				4FA656572E3FB7DF00AAC704 /* MXI.framework */,
 				4FA655512E3F45C100AAC704 /* AlchemistBase.xcframework */,

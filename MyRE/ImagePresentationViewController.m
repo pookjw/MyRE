@@ -14,6 +14,7 @@
 #import "MyRE-Swift.h"
 #import <MXI/MXI.h>
 #include <TargetConditionals.h>
+#import <DirectResource/DirectResource.h>
 
 @implementation ImagePresentationViewController
 
@@ -91,7 +92,6 @@
             //
             
 #if !TARGET_OS_SIMULATOR
-            REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, YES);
             
             CGImageRef cgImage = CGImageSourceCreateImageAtIndex(imageSource, primaryImageIndex, (CFDictionaryRef)@{
                 (id)kCGImageSourceDecodeRequest: (id)kCGImageSourceDecodeToSDR,
@@ -99,44 +99,124 @@
             });
             CIImage *ciImage = [[CIImage alloc] initWithCGImage:cgImage];
             mxiSceneFromCIImage(ciImage, ^(MXIScene * _Nonnull scene) {
-                REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
+                [scene retain];
                 
-                {
-                    struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTexture, (CFDictionaryRef)@{
-                        (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
-                    });
-                    struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
-                    RERelease(colorTextureAssetData);
-                    REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
-                    RERelease(colorTexture);
-                }
-                
-                {
-                    NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
-                    CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
-                    for (id<MTLTexture> texture in colorTextures) {
-                        struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
-                            (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
-                        });
-                        struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
-                        CFArrayAppendValue(textures, colorTexture);
-                        RERelease(data);
+                dispatch_async(dispatch_get_main_queue(), ^{
+//                    REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
+                    
+//                    {
+//                        assert(scene.colorTexture != nil);
+//                        struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTextures[0], (CFDictionaryRef)@{
+//                            (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+//                        });
+//                        struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
+//                        RERelease(colorTextureAssetData);
+//                        REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
+//                        RERelease(colorTexture);
+//                    }
+                    
+                    {
+                        NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
+                        CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
+                        for (id<MTLTexture> texture in colorTextures) {
+                            struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
+                                (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+                            });
+                            struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
+                            CFArrayAppendValue(textures, colorTexture);
+                            RERelease(data);
+                        }
+                        
+                        REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, textures);
+                        CFRelease(textures);
                     }
                     
-                    REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, textures);
-                    CFRelease(textures);
-                }
-                
-                REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
-                REImagePresentationComponentSetMXIAspectRatio(imagePresentationComponent, scene.aspectRatio);
-                REImagePresentationComponentSetMXILayerCount(imagePresentationComponent, scene.numLayers);
-                REImagePresentationComponentSetMXIResolutionWidth(imagePresentationComponent, scene.resolutionWidth);
-                REImagePresentationComponentSetMXIResolutionHeight(imagePresentationComponent, scene.resolutionHeight);
-                REImagePresentationComponentSetMXINearDistance(imagePresentationComponent, scene.depthRange.near);
-                REImagePresentationComponentSetMXIFarDistance(imagePresentationComponent, scene.depthRange.far);
-                REImagePresentationComponentSetMXIPremultipliedAlpha(imagePresentationComponent, scene.isPremultipliedAlpha);
-                
-                NSLog(@"Done!");
+                    {
+                        struct DRMeshDescriptor *descriptor = DRMeshDescriptorCreate();
+                        DRMeshDescriptorSetIndexCapacity(descriptor, scene.triangleCount * 3);
+                        DRMeshDescriptorSetIndexType(descriptor, scene.type);
+                        DRMeshDescriptorSetVertexCapacity(descriptor, scene.vertexCount);
+                        DRMeshDescriptorSetVertexBufferCount(descriptor, 3);
+                        DRMeshDescriptorSetVertexAttributeCount(descriptor, 3);
+                        DRMeshDescriptorSetVertexLayoutCount(descriptor, 3);
+                        DRMeshDescriptorSetVertexAttributeFormat(descriptor, 0, 0, MTLVertexFormatFloat3, 0, 0);
+                        DRMeshDescriptorSetVertexAttributeFormat(descriptor, 1, 5, MTLVertexFormatFloat2, 1, 0);
+                        DRMeshDescriptorSetVertexAttributeFormat(descriptor, 2, 6, MTLVertexFormatFloat3, 2, 0);
+                        DRMeshDescriptorSetVertexLayout(descriptor, 0, 0, 0, 12);
+                        DRMeshDescriptorSetVertexLayout(descriptor, 1, 1, 0, 8);
+                        DRMeshDescriptorSetVertexLayout(descriptor, 2, 2, 0, 8);
+                        
+                        struct DRContext *drContext = REServiceLocatorGetDirectResourceService(MRUIDefaultServiceLocator());
+                        NSError * _Nullable error = nil;
+                        struct DRMesh *drMesh = DRContextCreateMesh(drContext, descriptor, &error);
+                        assert(drMesh != NULL);
+                        DRRelease(descriptor);
+                        DRMeshSetPartCount(drMesh, 1);
+                        DRMeshSetPartAt(drMesh, 0, 0, 0xd5fc, 0x3, 0);
+                        
+                        NSLog(@"%lld", [scene vertexCount]); // 40192
+                        NSLog(@"%lld", [scene triangleCount]); // 18292
+                        
+                        NSLog(@"%lld", [scene.vertexPositions length]); // 643072
+                        NSLog(@"%lld", [scene.vertexUVs length]); // 321536
+                        NSLog(@"%lld", [scene.triangleIndices length]); // 219504
+                        NSLog(@"%lld", [scene.triangleSliceIndices length]); // 73168
+                        
+                        // TODO
+                        // length = 482304
+                        DRMeshUpdateVertices(drMesh, 0, ^(void * _Nonnull bytes, long long length) {
+                            const uint8_t *src = (const uint8_t *)(scene.vertexPositions.contents);
+                            float *dst = (float *)bytes;
+                            
+                            for (NSUInteger i = 0; i < scene.vertexCount; i++) {
+                                const float *position = (const float *)(src + i * 16);
+                                dst[i * 3 + 0] = position[0];
+                                dst[i * 3 + 1] = position[1];
+                                dst[i * 3 + 2] = position[2];
+                            }
+                        });
+                        
+                        // length = 321536
+                        DRMeshUpdateVertices(drMesh, 1, ^(void * _Nonnull bytes, long long length) {
+                            memcpy(bytes, scene.vertexUVs.contents, length);
+                        });
+                        
+                        // length = 321536
+                        DRMeshUpdateVertices(drMesh, 2, ^(void * _Nonnull bytes, long long length) {
+                            memcpy(bytes, scene.vertexUVs.contents, length);
+                        });
+                        
+                        // length = 114688
+                        DRMeshUpdateIndices(drMesh, ^(void * _Nonnull bytes, long long length) {
+                            const uint32_t *src = scene.triangleIndices.contents;
+                            uint16_t *dst = (uint16_t *)bytes;
+                            
+                            for (NSUInteger i = 0; i < scene.triangleCount * 3; i++) {
+                                uint32_t index = src[i];
+                                assert(index <= UINT16_MAX); 
+                                dst[i] = (uint16_t)index;
+                            }
+                        });
+                        
+                        struct REAsset *meshAsset = REAssetManagerCreateMeshAssetWithDirectMesh(MRUIDefaultAssetManager(), drMesh);
+                        DRRelease(drMesh);
+                        REImagePresentationComponentSetMXIMeshAsset(imagePresentationComponent, meshAsset);
+                        RERelease(meshAsset);
+                    }
+                    
+                    REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
+                    REImagePresentationComponentSetMXIAspectRatio(imagePresentationComponent, scene.aspectRatio);
+                    REImagePresentationComponentSetMXILayerCount(imagePresentationComponent, scene.numLayers);
+                    REImagePresentationComponentSetMXIResolutionWidth(imagePresentationComponent, scene.resolutionWidth);
+                    REImagePresentationComponentSetMXIResolutionHeight(imagePresentationComponent, scene.resolutionHeight);
+                    REImagePresentationComponentSetMXINearDistance(imagePresentationComponent, scene.depthRange.near);
+                    REImagePresentationComponentSetMXIFarDistance(imagePresentationComponent, scene.depthRange.far);
+                    REImagePresentationComponentSetMXIPremultipliedAlpha(imagePresentationComponent, scene.isPremultipliedAlpha);
+                    REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, YES);
+                    
+                    RENetworkMarkComponentDirty(imagePresentationComponent);
+                    NSLog(@"Done!");
+                });
             });
 #endif
             
@@ -386,4 +466,829 @@
  bt 1 ✅
 * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 2.7
     frame #0: 0x00000001d58da6ec CoreRE`REImagePresentationComponentSetMXIPremultipliedAlpha
+ 
+ (lldb) c
+ Process 3747 resuming
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+ IOSurface creation failed: e00002c2 parentID: 00000000 properties: {
+     IOSurfaceAddress = 4570857472;
+     IOSurfaceAllocSize = 9366783;
+     IOSurfaceCacheMode = 0;
+     IOSurfaceMapCacheAttribute = 1;
+     IOSurfaceName = CMPhoto;
+     IOSurfacePixelFormat = 1246774599;
+ }
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceCacheMode
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfacePixelFormat
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceMapCacheAttribute
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceAddress
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceAllocSize
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceName
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+ IOSurface creation failed: e00002c2 parentID: 00000000 properties: {
+     IOSurfaceAddress = 4570857472;
+     IOSurfaceAllocSize = 9366783;
+     IOSurfaceCacheMode = 0;
+     IOSurfaceMapCacheAttribute = 1;
+     IOSurfaceName = CMPhoto;
+     IOSurfacePixelFormat = 1246774599;
+ }
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceCacheMode
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfacePixelFormat
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceMapCacheAttribute
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceAddress
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceAllocSize
+ IOSurface creation failed: e00002c2 parentID: 00000000 property: IOSurfaceName
+ The return value of deprecated event handler is ignored. Please use EventUpdateCallback instead.
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.71
+     frame #0: 0x00000001d90e7e58 DirectResource`DRMeshDescriptorCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.80
+     frame #0: 0x00000001d90e7ef0 DirectResource`DRMeshDescriptorSetIndexCapacity
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.81
+     frame #0: 0x00000001d90e7f18 DirectResource`DRMeshDescriptorSetIndexType
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.85
+     frame #0: 0x00000001d90e7ec8 DirectResource`DRMeshDescriptorSetVertexCapacity
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.84
+     frame #0: 0x00000001d90e7ea0 DirectResource`DRMeshDescriptorSetVertexBufferCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.82
+     frame #0: 0x00000001d90e7f48 DirectResource`DRMeshDescriptorSetVertexAttributeCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.87
+     frame #0: 0x00000001d90e8174 DirectResource`DRMeshDescriptorSetVertexLayoutCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.83
+     frame #0: 0x00000001d90e811c DirectResource`DRMeshDescriptorSetVertexAttributeFormat
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.83
+     frame #0: 0x00000001d90e811c DirectResource`DRMeshDescriptorSetVertexAttributeFormat
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.83
+     frame #0: 0x00000001d90e811c DirectResource`DRMeshDescriptorSetVertexAttributeFormat
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.86
+     frame #0: 0x00000001d90e8340 DirectResource`DRMeshDescriptorSetVertexLayout
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.86
+     frame #0: 0x00000001d90e8340 DirectResource`DRMeshDescriptorSetVertexLayout
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.86
+     frame #0: 0x00000001d90e8340 DirectResource`DRMeshDescriptorSetVertexLayout
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.45
+     frame #0: 0x00000001d90e9978 DirectResource`DRContextCreateMesh
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.114
+     frame #0: 0x00000001d90ea5e4 DirectResource`DRResourceGetIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.113
+     frame #0: 0x00000001d90ea600 DirectResource`DRResourceGetClientIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.114
+     frame #0: 0x00000001d90ea5e4 DirectResource`DRResourceGetIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.106
+     frame #0: 0x00000001d90e8d10 DirectResource`DRMeshUpdateVertices
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.106
+     frame #0: 0x00000001d90e8d10 DirectResource`DRMeshUpdateVertices
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.106
+     frame #0: 0x00000001d90e8d10 DirectResource`DRMeshUpdateVertices
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.104
+     frame #0: 0x00000001d90e8f30 DirectResource`DRMeshUpdateIndices
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.90
+     frame #0: 0x00000001d90e872c DirectResource`DRMeshGetPartCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.102
+     frame #0: 0x00000001d90e8764 DirectResource`DRMeshSetPartCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.114
+     frame #0: 0x00000001d90ea5e4 DirectResource`DRResourceGetIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.113
+     frame #0: 0x00000001d90ea600 DirectResource`DRResourceGetClientIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.90
+     frame #0: 0x00000001d90e872c DirectResource`DRMeshGetPartCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.101
+     frame #0: 0x00000001d90e8778 DirectResource`DRMeshSetPartAt
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.114
+     frame #0: 0x00000001d90ea5e4 DirectResource`DRResourceGetIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.113
+     frame #0: 0x00000001d90ea600 DirectResource`DRResourceGetClientIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.67
+     frame #0: 0x00000001d90ea690 DirectResource`DRMeshAsResource
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.114
+     frame #0: 0x00000001d90ea5e4 DirectResource`DRResourceGetIdentifier
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.94
+     frame #0: 0x00000001d90e9010 DirectResource`DRMeshReadIndicesUsing
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.96
+     frame #0: 0x00000001d90e8fe0 DirectResource`DRMeshReadVerticesUsing
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.96
+     frame #0: 0x00000001d90e8fe0 DirectResource`DRMeshReadVerticesUsing
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.96
+     frame #0: 0x00000001d90e8fe0 DirectResource`DRMeshReadVerticesUsing
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.96
+     frame #0: 0x00000001d90e8fe0 DirectResource`DRMeshReadVerticesUsing
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.68
+     frame #0: 0x00000001d90e845c DirectResource`DRMeshCopyDescriptor
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.70
+     frame #0: 0x00000001d90e8adc DirectResource`DRMeshDescriptorCalculateBufferSizes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.68
+     frame #0: 0x00000001d90e845c DirectResource`DRMeshCopyDescriptor
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.90
+     frame #0: 0x00000001d90e872c DirectResource`DRMeshGetPartCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.68
+     frame #0: 0x00000001d90e845c DirectResource`DRMeshCopyDescriptor
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.74
+     frame #0: 0x00000001d90e7f2c DirectResource`DRMeshDescriptorGetVertexAttributeCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.73
+     frame #0: 0x00000001d90e7f04 DirectResource`DRMeshDescriptorGetIndexType
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.73
+     frame #0: 0x00000001d90e7f04 DirectResource`DRMeshDescriptorGetIndexType
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.74
+     frame #0: 0x00000001d90e7f2c DirectResource`DRMeshDescriptorGetVertexAttributeCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.75
+     frame #0: 0x00000001d90e80d0 DirectResource`DRMeshDescriptorGetVertexAttributeFormat
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.78
+     frame #0: 0x00000001d90e82e8 DirectResource`DRMeshDescriptorGetVertexLayout
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.75
+     frame #0: 0x00000001d90e80d0 DirectResource`DRMeshDescriptorGetVertexAttributeFormat
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.78
+     frame #0: 0x00000001d90e82e8 DirectResource`DRMeshDescriptorGetVertexLayout
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.75
+     frame #0: 0x00000001d90e80d0 DirectResource`DRMeshDescriptorGetVertexAttributeFormat
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.78
+     frame #0: 0x00000001d90e82e8 DirectResource`DRMeshDescriptorGetVertexLayout
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.90
+     frame #0: 0x00000001d90e872c DirectResource`DRMeshGetPartCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.89
+     frame #0: 0x00000001d90e88a0 DirectResource`DRMeshGetPartAt
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.73
+     frame #0: 0x00000001d90e7f04 DirectResource`DRMeshDescriptorGetIndexType
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.90
+     frame #0: 0x00000001d90e872c DirectResource`DRMeshGetPartCount
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.89
+     frame #0: 0x00000001d90e88a0 DirectResource`DRMeshGetPartAt
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.67
+     frame #0: 0x00000001d90ea690 DirectResource`DRMeshAsResource
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.113
+     frame #0: 0x00000001d90ea600 DirectResource`DRResourceGetClientIdentifier
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.51
+     frame #0: 0x00000001d90e9dc8 DirectResource`DRContextSetCommitUserPayload
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.54
+     frame #0: 0x00000001d90e916c DirectResource`DRFenceCreate
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.32
+     frame #0: 0x00000001d90e9ecc DirectResource`DRContextCommitAddFence
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.56
+     frame #0: 0x00000001d90e91b0 DirectResource`DRFenceInvalidate
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.117
+     frame #0: 0x00000001d90eb770 DirectResource`DRResourcesCommitCopyToXPC
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+ Video texture allocator is not initialized.
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+ [VideoLightSpillGenerator] [VideoLightSpillMPSCallsPrewarm] Failed to create input texture with MTLPixelFormat MTLPixelFormatBGRA8Unorm_sRGB
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.60
+     frame #0: 0x00000001d90eabbc DirectResource`DRMemoryResourceCreate
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.64
+     frame #0: 0x00000001d90eacc4 DirectResource`DRMemoryResourceGetBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.63
+     frame #0: 0x00000001d90eacd4 DirectResource`DRMemoryResourceDidUpdateBytes
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.66
+     frame #0: 0x00000001d90eac9c DirectResource`DRMemoryResourceIsPrivateToProcess
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.58
+     frame #0: 0x00000001d90eabf0 DirectResource`DRMemoryResourceCopyBuffer
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #11, name = 'Task 1', queue = 'com.apple.main-thread', stop reason = breakpoint 3.65
+     frame #0: 0x00000001d90eacb0 DirectResource`DRMemoryResourceGetLength
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+ (label: Optional("imagePair"), value: RealityFoundation.ImagePresentationComponent.ImagePair(monoImage: RealityFoundation.ImagePresentationComponent.MonoImage(textureResource: RealityKit.TextureResource, orientation: __C.CGImagePropertyOrientation), spatialStereoImage: nil))
+ (label: Optional("imageSource"), value: <CGImageSource: 0x120edcd50> 0x121a3df80 'public.jpeg')
+ (label: Optional("monoIndex"), value: 0)
+ (label: Optional("monoFocalLenIn35mmFilm"), value: Optional(24.0))
+ (label: Optional("mxiSceneResource"), value: Optional(RealityFoundation.MXISceneResource))
+ (label: Optional("registeredOwners"), value: Set([]))
+ (label: Optional("generationProgress"), value: Optional(1.0))
+ ---
+ (label: Optional("sceneType"), value: RealityFoundation.MXISceneResource.MXISceneType.plane)
+ (label: Optional("verticalFoV"), value: 0.9915555)
+ (label: Optional("aspectRatio"), value: 1.3333334)
+ (label: Optional("nearDistance"), value: 0.56248134)
+ (label: Optional("farDistance"), value: 29.66007)
+ (label: Optional("layerCount"), value: 64)
+ (label: Optional("resolutionWidth"), value: 2048)
+ (label: Optional("resolutionHeight"), value: 1536)
+ (label: Optional("premultipliedAlpha"), value: false)
+ (label: Optional("meshInternal"), value: 0x0000000121ab3b18)
+ (label: Optional("textureInternal"), value: nil)
+ (label: Optional("texturesInternal"), value: [0x0000000121ab2c18, 0x0000000121ab3618, 0x0000000121ab3118])
+ (label: Optional("backgroundTextureInternal"), value: Optional(0x000000011e5d2218))
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+ Missing some entity render options, this is an UNEXPECTED state. Make sure the scene is being tracked by the `RenderOptionsService`. Calling this method from  a handler for `RESceneEntityWillDeactivateEvent` or related can also cause this issue.
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.49
+     frame #0: 0x00000001d90e9d20 DirectResource`DRContextHasOpenCommit
+  bt 1
+ * thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 3.31
+     frame #0: 0x00000001d90e9d74 DirectResource`DRContextCommit
  */

@@ -228,7 +228,10 @@ exports:
     _REImagePresentationComponentSetMXIResolutionHeight,
     _REImagePresentationComponentSetMXINearDistance,
     _REImagePresentationComponentSetMXIFarDistance,
-    _REImagePresentationComponentSetMXITextureAsset ]
+    _REImagePresentationComponentSetMXITextureAsset,
+    _REServiceLocatorGetDirectResourceService,
+    _REAssetManagerCreateMeshAssetWithDirectMesh,
+    _REImagePresentationComponentSetMXIMeshAsset ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

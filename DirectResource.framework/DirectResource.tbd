@@ -1,0 +1,27 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
+install-name:    '/System/Library/PrivateFrameworks/DirectResource.framework/DirectResource'
+swift-abi-version: 7
+exports:
+  - targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
+    symbols:              [ _DRMeshDescriptorCreate,
+    _DRMeshDescriptorSetIndexCapacity,
+    _DRMeshDescriptorSetIndexType,
+    _DRMeshDescriptorSetVertexCapacity,
+    _DRMeshDescriptorSetVertexBufferCount,
+    _DRMeshDescriptorSetVertexAttributeCount,
+    _DRMeshDescriptorSetVertexLayoutCount,
+    _DRMeshDescriptorSetVertexAttributeFormat,
+    _DRMeshDescriptorSetVertexLayout,
+    _DRContextCreateMesh,
+    _DRRetain,
+    _DRRelease,
+    _DRMeshUpdateVertices,
+    _DRMeshUpdateIndices,
+    _DRMeshGetPartCount,
+    _DRMeshSetPartCount,
+    _DRMeshSetPartAt ]
+    objc-classes:         [  ]
+    objc-ivars:           [  ]
+...

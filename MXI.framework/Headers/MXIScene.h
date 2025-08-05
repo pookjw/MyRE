@@ -9,8 +9,16 @@ struct DepthRange {
 };
 
 @interface MXIScene : NSObject
+@property (readonly, nonatomic) size_t vertexCount;
+@property (readonly, nonatomic) size_t triangleCount;
+@property (readonly, nonatomic) size_t opaqueTriangleCount;
+@property (readonly, nonatomic) id<MTLBuffer> vertexPositions;
+@property (readonly, nonatomic) id<MTLBuffer> vertexUVs;
+@property (readonly, nonatomic) id<MTLBuffer> triangleIndices;
+@property (readonly, nonatomic) id<MTLBuffer> triangleSliceIndices;
 @property (readonly, nonatomic) id<MTLTexture> colorTexture;
 @property (readonly, nonatomic) NSArray<id<MTLTexture>> *colorTextures;
+@property (nonatomic) long type;
 @property (nonatomic) float verticalFOV;
 @property (nonatomic) float effectiveVerticalFOV;
 @property (nonatomic) float aspectRatio;
