@@ -42,3 +42,4 @@
 #import <CoreRE/REImagePresentationStatusComponent.h>
 #import <CoreRE/RETextureAsset.h>
 #import <CoreRE/REAsset.h>
+#import <CoreRE/REMXIComponent.h>

@@ -232,7 +232,9 @@ exports:
     _REServiceLocatorGetDirectResourceService,
     _REAssetManagerCreateMeshAssetWithDirectMesh,
     _REImagePresentationComponentSetMXIMeshAsset,
-    _REAABBExpandedToIncludePoint ]
+    _REAABBExpandedToIncludePoint,
+    _REMXIComponentSetSceneType,
+    _REMXIComponentGetSceneType ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...
