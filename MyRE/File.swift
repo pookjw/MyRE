@@ -11,7 +11,6 @@
 import Metal
 import CoreRE3DGSFoundation
 @preconcurrency import ImageIO
-import UIKit
 
 @_cdecl("mxiSceneFromCIImage")
 func mxiSceneFromCIImage(_ ciImage: CIImage, completionHandler: @escaping @Sendable (MXIScene) -> Void) {
