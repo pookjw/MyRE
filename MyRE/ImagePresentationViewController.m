@@ -66,7 +66,7 @@
     REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
     
 //    NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image_1" withExtension:UTTypeHEIC.preferredFilenameExtension];
-    NSURL *url = [NSBundle.mainBundle URLForResource:@"image_1" withExtension:UTTypeJPEG.preferredFilenameExtension];
+    NSURL *url = [NSBundle.mainBundle URLForResource:@"image_2" withExtension:UTTypeJPEG.preferredFilenameExtension];
     assert(url != nil);
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((CFURLRef)url, NULL);
     size_t count = CGImageSourceGetCount(imageSource);
@@ -102,8 +102,6 @@
                 [scene retain];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
-                    
                     {
                         NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
                         CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
@@ -220,29 +218,24 @@
                         
                         //
                         
-                        {
-                            MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm_sRGB width:64 height:64 mipmapped:NO];
-                            id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-                            id<MTLTexture> texture = [device newTextureWithDescriptor:descriptor];
-                            [device release];
-                            [ImagePresentationViewController renderMXIBackgroundWithMesh:meshAsset texture:scene.colorTexture textures:scene.colorTextures sceneType:scene.type verticalFoV:scene.verticalFOV aspectRatio:scene.aspectRatio nearDistance:scene.depthRange.near farDistance:scene.depthRange.far toBackgroundTexture:texture];
-                            RERelease(meshAsset);
-                            [texture release];
-                            
-                            // $s17RealityFoundation16MXISceneResourceC19renderMXIBackground33_1E3AB1A79F9B511C8133C7993194CC62LL4mesh7texture8textures9sceneType11verticalFoV11aspectRatio12nearDistance03farY019toBackgroundTextureys13OpaquePointerV_APSgSayAPGAC0cS0OS4fSo10MTLTexture_ptKFZTf4nnnnnnnnnd_n
-                            id<MTLSharedEvent> sharedEvent = [device newSharedEvent];
-                            
-                            [device release];
-                            [sharedEvent release];
-                            
-                            struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTextures[0], (CFDictionaryRef)@{
-                                (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
-                            });
-                            struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
-                            RERelease(colorTextureAssetData);
-                            REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
-                            RERelease(colorTexture);
-                        }
+//                        {
+//                            MTLTextureDescriptor *descriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm_sRGB width:64 height:64 mipmapped:NO];
+//                            id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+//                            id<MTLTexture> texture = [device newTextureWithDescriptor:descriptor];
+//                            [device release];
+//                            [ImagePresentationViewController renderMXIBackgroundWithMesh:meshAsset texture:scene.colorTexture textures:scene.colorTextures sceneType:scene.type verticalFoV:scene.verticalFOV aspectRatio:scene.aspectRatio nearDistance:scene.depthRange.near farDistance:scene.depthRange.far toBackgroundTexture:texture];
+//                            RERelease(meshAsset);
+//                            
+//                            struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
+//                                (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+//                            });
+//                            [texture release];
+//                            struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, colorTextureAssetData);
+//                            RERelease(colorTextureAssetData);
+//                            REImagePresentationComponentSetMXIBackgroundTextureAsset(imagePresentationComponent, colorTexture);
+//                            RERelease(colorTexture);
+//                        }
+                        REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
                     }
                     
                     REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
@@ -384,9 +377,9 @@
     return asset;
 }
 
-+ (void)renderMXIBackgroundWithMesh:(struct REMesh *)mesh texture:(id<MTLTexture> _Nullable)texture textures:(NSArray<id<MTLTexture>> *)textures sceneType:(long)sceneType verticalFoV:(float)verticalFoV aspectRatio:(float)aspectRatio nearDistance:(float)nearDistance farDistance:(float)farDistance toBackgroundTexture:(id<MTLTexture>)backgroundTexture {
++ (void)renderMXIBackgroundWithMesh:(struct REAsset *)mesh texture:(id<MTLTexture> _Nullable)texture textures:(NSArray<id<MTLTexture>> *)textures sceneType:(long)sceneType verticalFoV:(float)verticalFoV aspectRatio:(float)aspectRatio nearDistance:(float)nearDistance farDistance:(float)farDistance toBackgroundTexture:(id<MTLTexture>)backgroundTexture {
     // $s17RealityFoundation16MXISceneResourceC19renderMXIBackground33_1E3AB1A79F9B511C8133C7993194CC62LL4mesh7texture8textures9sceneType11verticalFoV11aspectRatio12nearDistance03farY019toBackgroundTextureys13OpaquePointerV_APSgSayAPGAC0cS0OS4fSo10MTLTexture_ptKFZTf4nnnnnnnnnd_n
-    abort();
+//    abort();
 }
 
 @end

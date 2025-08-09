@@ -20,8 +20,6 @@ struct RECollisionMeshShape {};
 
 struct RECollisionMesh {};
 
-struct REMesh {};
-
 struct RECollisionShape {};
 
 struct REAsset {};
