@@ -195,9 +195,9 @@
                                     v0 = a0.z; v1 = a1.z; v2 = a2.z;
                                 }
                                 
-                                dst[i0] = (simd_float2){ triId, v0 };
-                                dst[i1] = (simd_float2){ triId, v1 };
-                                dst[i2] = (simd_float2){ triId, v2 };
+                                dst[i0] = simd_make_float2(triId, v0);
+                                dst[i1] = simd_make_float2(0.f, v1);
+                                dst[i2] = simd_make_float2(0.f, v2);
                             }
                         });
                         
