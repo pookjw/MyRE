@@ -1,4 +1,5 @@
 #import <CoreFoundation/CoreFoundation.h>
+#include <simd/simd.h>
 
 #ifdef __cplusplus
 #define RE_EXTERN       extern "C"

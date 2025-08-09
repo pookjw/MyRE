@@ -231,7 +231,8 @@ exports:
     _REImagePresentationComponentSetMXITextureAsset,
     _REServiceLocatorGetDirectResourceService,
     _REAssetManagerCreateMeshAssetWithDirectMesh,
-    _REImagePresentationComponentSetMXIMeshAsset ]
+    _REImagePresentationComponentSetMXIMeshAsset,
+    _REAABBExpandedToIncludePoint ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

@@ -21,7 +21,8 @@ exports:
     _DRMeshUpdateIndices,
     _DRMeshGetPartCount,
     _DRMeshSetPartCount,
-    _DRMeshSetPartAt ]
+    _DRMeshSetPartAt,
+    _DRMeshGetPartCount ]
     objc-classes:         [  ]
     objc-ivars:           [  ]
 ...

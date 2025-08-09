@@ -16,7 +16,7 @@ struct Spatial3DImageView: View {
     var body: some View {
         RealityView { content in
             content.add(entity)
-            entity.transform.scale = .init(x: 0.5, y: 0.5, z: 0.5)
+            entity.transform.scale = .init(x: 0.3, y: 0.3, z: 0.3)
         } update: { content in
             if let component {
                 entity.components.set(component)

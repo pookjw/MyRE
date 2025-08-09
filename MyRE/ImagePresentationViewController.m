@@ -28,7 +28,7 @@
     
     struct REComponent *transformComponent = REEntityGetOrAddComponentByClass(customEntity, RETransformComponentGetComponentType());
     RETransformComponentSetWorldPosition(transformComponent, simd_make_float3(0.f, 0.f, 0.1f));
-    RETransformComponentSetLocalScale(transformComponent, simd_make_float3(0.5f, 0.5f, 0.5f));
+    RETransformComponentSetLocalScale(transformComponent, simd_make_float3(0.3f, 0.3f, 0.3f));
     
     struct REComponent *imagePresentationComponent = REEntityGetOrAddComponentByClass(customEntity, REImagePresentationComponentGetComponentType());
     REImagePresentationComponentSetScreenHeight(imagePresentationComponent, 1.f);
@@ -102,8 +102,9 @@
                 [scene retain];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-//                    REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
+                    REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
                     
+                    // 아마 64x64의 검은색 Texture 넣어주는 것 같은데 안해도 되는듯
 //                    {
 //                        assert(scene.colorTexture != nil);
 //                        struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(scene.colorTextures[0], (CFDictionaryRef)@{
@@ -141,7 +142,7 @@
                         DRMeshDescriptorSetVertexLayoutCount(descriptor, 3);
                         DRMeshDescriptorSetVertexAttributeFormat(descriptor, 0, 0, MTLVertexFormatFloat3, 0, 0);
                         DRMeshDescriptorSetVertexAttributeFormat(descriptor, 1, 5, MTLVertexFormatFloat2, 1, 0);
-                        DRMeshDescriptorSetVertexAttributeFormat(descriptor, 2, 6, MTLVertexFormatFloat3, 2, 0);
+                        DRMeshDescriptorSetVertexAttributeFormat(descriptor, 2, 6, MTLVertexFormatFloat2, 2, 0);
                         DRMeshDescriptorSetVertexLayout(descriptor, 0, 0, 0, 12);
                         DRMeshDescriptorSetVertexLayout(descriptor, 1, 1, 0, 8);
                         DRMeshDescriptorSetVertexLayout(descriptor, 2, 2, 0, 8);
@@ -152,49 +153,75 @@
                         assert(drMesh != NULL);
                         DRRelease(descriptor);
                         DRMeshSetPartCount(drMesh, 1);
-                        DRMeshSetPartAt(drMesh, 0, 0, 0xd5fc, 0x3, 0);
                         
-                        NSLog(@"%lld", [scene vertexCount]); // 40192
-                        NSLog(@"%lld", [scene triangleCount]); // 18292
+                        __block struct DRBoundingBox boundingBox;
+                        boundingBox.min = simd_make_float3(FLT_MAX, FLT_MAX, FLT_MAX);
+                        boundingBox.max = simd_make_float3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
                         
-                        NSLog(@"%lld", [scene.vertexPositions length]); // 643072 (SIMD3)
-                        NSLog(@"%lld", [scene.vertexUVs length]); // 321536 (SIMD2)
-                        NSLog(@"%lld", [scene.triangleIndices length]); // 219504 (UInt32)
-                        NSLog(@"%lld", [scene.triangleSliceIndices length]); // 73168 (UInt32)
-                        
-                        // TODO
-                        // length = 482304
                         DRMeshUpdateVertices(drMesh, 0, ^(void * _Nonnull bytes, long long length) {
-                            const uint8_t *src = (const uint8_t *)(scene.vertexPositions.contents);
-                            float *dst = (float *)bytes;
+                            // x21
+                            const simd_float3 *src = (const simd_float3 *)(scene.vertexPositions.contents);
+                            MTLPackedFloat3 *dst = (MTLPackedFloat3 *)bytes;
                             
-                            for (NSUInteger i = 0; i < scene.vertexCount; i++) {
-                                const float *position = (const float *)(src + i * 16);
-                                dst[i * 3 + 0] = position[0];
-                                dst[i * 3 + 1] = position[1];
-                                dst[i * 3 + 2] = position[2];
+                            size_t vertexCount = scene.vertexPositions.length / sizeof(simd_float3);
+                            for (size_t idx = 0; idx < vertexCount; idx++) {
+                                simd_float3 point = src[idx];
+                                dst[idx] = MTLPackedFloat3Make(point.x, point.y, point.z);
+                                boundingBox = REAABBExpandedToIncludePoint(boundingBox.min, boundingBox.max, point);
                             }
                         });
                         
-                        // length = 321536
+                        assert(DRMeshGetPartCount(drMesh) == 1);
+                        DRMeshSetPartAt(drMesh, DRMeshGetPartCount(drMesh) - 1, scene.opaqueTriangleCount, scene.triangleCount * 3, MTLPrimitiveTypeTriangle, 0, boundingBox);
+                        
                         DRMeshUpdateVertices(drMesh, 1, ^(void * _Nonnull bytes, long long length) {
                             memcpy(bytes, scene.vertexUVs.contents, length);
                         });
                         
-                        // length = 321536
                         DRMeshUpdateVertices(drMesh, 2, ^(void * _Nonnull bytes, long long length) {
-                            abort();
+                            const simd_float3 *vertexPositions = (const simd_float3 *)scene.vertexPositions.contents;
+                            const uint32_t *triIndices = (const uint32_t *)scene.triangleIndices.contents;
+                            const uint32_t *slice = (const uint32_t *)scene.triangleSliceIndices.contents;
+                            simd_float2 *dst = (simd_float2 *)bytes;
+                            
+                            const size_t triCount = scene.triangleCount;
+                            for (size_t t = 0; t < triCount; ++t) {
+                                const uint32_t i0 = triIndices[t * 3 + 0];
+                                const uint32_t i1 = triIndices[t * 3 + 1];
+                                const uint32_t i2 = triIndices[t * 3 + 2];
+                                
+                                if (i0 >= scene.vertexCount || i1 >= scene.vertexCount || i2 >= scene.vertexCount) {
+                                    abort();
+                                }
+                                
+                                const float triId = (float)slice[t];
+                                
+                                simd_float3 a0 = simd_abs(vertexPositions[i0]);
+                                simd_float3 a1 = simd_abs(vertexPositions[i1]);
+                                simd_float3 a2 = simd_abs(vertexPositions[i2]);
+                                
+                                float v0, v1, v2;
+                                if (scene.type != 0) {
+                                    v0 = fminf(fminf(a0.x, a0.y), a0.z);
+                                    v1 = fminf(fminf(a1.x, a1.y), a1.z);
+                                    v2 = fmaxf(fmaxf(a2.x, a2.y), a2.z);
+                                } else {
+                                    v0 = a0.z; v1 = a1.z; v2 = a2.z;
+                                }
+                                
+                                dst[i0] = (simd_float2){ triId, v0 };
+                                dst[i1] = (simd_float2){ triId, v1 };
+                                dst[i2] = (simd_float2){ triId, v2 };
+                            }
                         });
                         
-                        
-                        
-                        // length = 114688
                         DRMeshUpdateIndices(drMesh, ^(void * _Nonnull bytes, long long length) {
-                            uint16_t *dst = (uint16_t *)bytes;
                             const uint32_t *src = (const uint32_t *)scene.triangleIndices.contents;
+                            uint16_t *dst = (uint16_t *)bytes;
+                            
                             NSUInteger count = length / sizeof(uint16_t);
-                            for (NSUInteger i = 0; i < count; ++i) {
-                                dst[i] = (uint16_t)(src[i] & 0xFFFF);
+                            for (NSUInteger idx = 0; idx < count; idx++) {
+                                dst[idx] = (uint16_t)src[idx];
                             }
                         });
                         
