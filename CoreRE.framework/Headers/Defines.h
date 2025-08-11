@@ -59,3 +59,15 @@ struct REAssetLoadRequest {};
 struct RESpatial3DImage {};
 
 struct RETextureAssetData {};
+
+struct REEngineOverlay {};
+
+struct REDrawingManager {};
+
+struct RERenderManager {};
+
+struct REECSManager {};
+
+struct RERealityRendererSceneGroup {};
+
+struct REEngineConfiguration {};

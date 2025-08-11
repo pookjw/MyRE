@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4F0018132E48FDAF003E2F4F /* RealityFusion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F0018122E48FDAF003E2F4F /* RealityFusion.framework */; };
 		4F5EA2B52E3A529700061EAF /* FrontBoardServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5EA2B42E3A529700061EAF /* FrontBoardServices.framework */; };
 		4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */; };
 		4F82C0122E2BBA8300216AEA /* CoreRE.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F82C0112E2BBA8300216AEA /* CoreRE.framework */; };
@@ -21,6 +22,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4F0018122E48FDAF003E2F4F /* RealityFusion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RealityFusion.framework; sourceTree = "<group>"; };
 		4F5EA2B42E3A529700061EAF /* FrontBoardServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FrontBoardServices.framework; sourceTree = "<group>"; };
 		4F6144292E30AEF000D752BB /* QuartzCorePrivate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = QuartzCorePrivate.framework; sourceTree = "<group>"; };
 		4F82BFC22E2BB5ED00216AEA /* MyRE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyRE.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,6 +68,7 @@
 				4FA65EB62E41F95100AAC704 /* DirectResource.framework in Frameworks */,
 				4FA6565B2E3FB8C400AAC704 /* MXI.framework in Frameworks */,
 				4F61442A2E30AEF000D752BB /* QuartzCorePrivate.framework in Frameworks */,
+				4F0018132E48FDAF003E2F4F /* RealityFusion.framework in Frameworks */,
 				4F82C0162E2BBAEA00216AEA /* MRUIKit.framework in Frameworks */,
 				4F5EA2B52E3A529700061EAF /* FrontBoardServices.framework in Frameworks */,
 				4FBDBCA52E2E4E3700CDAF27 /* UIKitPrivate.framework in Frameworks */,
@@ -98,6 +101,7 @@
 		4F82BFDF2E2BB7F800216AEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4F0018122E48FDAF003E2F4F /* RealityFusion.framework */,
 				4FA65EB52E41F95100AAC704 /* DirectResource.framework */,
 				4FA657DC2E3FBDD200AAC704 /* CoreRE3DGSFoundation.framework */,
 				4FA656572E3FB7DF00AAC704 /* MXI.framework */,

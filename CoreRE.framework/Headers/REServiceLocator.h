@@ -5,6 +5,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 RE_EXTERN struct REAssetManager * REServiceLocatorGetAssetManager(struct REServiceLocator *serviceLocator);
+RE_EXTERN struct RERenderManager * REServiceLocatorGetRenderManager(struct REServiceLocator *serviceLocator);
+RE_EXTERN struct REECSManager * REServiceLocatorGetECSService(struct REServiceLocator *serviceLocator);
 RE_EXTERN struct DRContext * REServiceLocatorGetDirectResourceService(struct REServiceLocator *serviceLocator);
 
 NS_ASSUME_NONNULL_END

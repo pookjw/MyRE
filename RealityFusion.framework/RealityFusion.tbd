@@ -1,0 +1,23 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
+install-name:    '/System/Library/PrivateFrameworks/RealityFusion.framework/RealityFusion'
+swift-abi-version: 7
+exports:
+  - targets:         [ x86_64-xros-simulator, arm64-xros-simulator, arm64-xros, arm64e-xros ]
+    symbols:              [ _RFServiceManagerCreate,
+    _RFMeshReconstructionServiceCreate,
+    _RFServiceManagerSetMeshReconstructionService,
+    _RFServiceManagerSetAnchorManagementService,
+    _RFAnchorManagementServiceCreate,
+    _RFLoggingServiceCreate,
+    _RFEnvironmentProbePlacementServiceCreate,
+    _RFServiceManagerSetEnvironmentProbePlacementService,
+    _RFAtmospherePlacementServiceCreate,
+    _RFServiceManagerSetAtmospherePlacementService,
+    _RFAnchorDataProviderCreate,
+    _RFServiceManagerSetAnchorDataProvider,
+    _RFServiceManagerSetLoggingService ]
+    objc-classes:         [  ]
+    objc-ivars:           [  ]
+...

@@ -43,3 +43,13 @@
 #import <CoreRE/RETextureAsset.h>
 #import <CoreRE/REAsset.h>
 #import <CoreRE/REMXIComponent.h>
+#import <CoreRE/REPerspectiveCameraComponent.h>
+#import <CoreRE/REEngineOverlay.h>
+#import <CoreRE/REDrawingManager.h>
+#import <CoreRE/RERenderManager.h>
+#import <CoreRE/REECSManager.h>
+#import <CoreRE/REEngineConfiguration.h>
+#import <CoreRE/RESceneUnderstandingRenderOptionsComponent.h>
+#import <CoreRE/REPointLightComponent.h>
+#import <CoreRE/RECameraViewDescriptorsComponent.h>
+#import <CoreRE/RERenderGraphFileProviderArrayComponent.h>

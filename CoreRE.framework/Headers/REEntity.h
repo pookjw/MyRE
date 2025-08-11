@@ -30,5 +30,8 @@ RE_EXTERN BOOL REEntityIsVisible(struct REEntity *entity);
 RE_EXTERN void REEntitySetParent(struct REEntity *entity, struct REEntity *parent);
 RE_EXTERN void REEntityRemoveFromSceneOrParent(struct REEntity *entity);
 RE_EXTERN id REEntityGetSwiftObject(struct REEntity *entity);
+RE_EXTERN void REHideEntity(struct REEntity *entity);
+RE_EXTERN struct REComponent * REEntityAddComponentNoEvents(struct REEntity *entity, struct REComponentClass *componentClass);
+RE_EXTERN void REEntitySendAddAndActivateComponentEvents(struct REEntity *entity, struct REComponentClass *componentClass);
 
 NS_ASSUME_NONNULL_END

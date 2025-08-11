@@ -15,6 +15,8 @@
 #import <MXI/MXI.h>
 #include <TargetConditionals.h>
 #import <DirectResource/DirectResource.h>
+#import <RealityFusion/RealityFusion.h>
+#include <uuid/uuid.h>
 
 @implementation ImagePresentationViewController
 
@@ -66,7 +68,7 @@
     REImagePresentationComponentSetHasGeneratedSpatial3DImageContent(imagePresentationComponent, NO);
     
 //    NSURL *url = [NSBundle.mainBundle URLForResource:@"spatial_image_1" withExtension:UTTypeHEIC.preferredFilenameExtension];
-    NSURL *url = [NSBundle.mainBundle URLForResource:@"image_2" withExtension:UTTypeJPEG.preferredFilenameExtension];
+    NSURL *url = [NSBundle.mainBundle URLForResource:@"image_1" withExtension:UTTypeJPEG.preferredFilenameExtension];
     assert(url != nil);
     CGImageSourceRef imageSource = CGImageSourceCreateWithURL((CFURLRef)url, NULL);
     size_t count = CGImageSourceGetCount(imageSource);
@@ -102,20 +104,33 @@
                 [scene retain];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
+                    struct REAsset * _Nullable colorTexture;
                     {
-                        NSArray<id<MTLTexture>> *colorTextures = scene.colorTextures;
-                        CFMutableArrayRef textures = CFArrayCreateMutable(kCFAllocatorDefault, colorTextures.count, NULL);
-                        for (id<MTLTexture> texture in colorTextures) {
+                        id<MTLTexture> _Nullable _colorTexture = scene.colorTexture;
+                        if (_colorTexture) {
+                            struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(_colorTexture, (CFDictionaryRef)@{
+                                (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
+                            });
+                            colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
+                        } else {
+                            colorTexture = nil;
+                        }
+                    }
+                    
+                    CFMutableArrayRef colorTextures;
+                    {
+                        NSArray<id<MTLTexture>> *_colorTextures = scene.colorTextures;
+                        colorTextures = CFArrayCreateMutable(kCFAllocatorDefault, _colorTextures.count, NULL);
+                        for (id<MTLTexture> texture in _colorTextures) {
                             struct RETextureAssetData *data = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
                                 (id)kRETextureAssetCreateOptionSemantic: (id)kRETextureAssetCreateSemanticColor
                             });
                             struct REAsset *colorTexture = REAssetManagerCreateTextureAssetFromData(MRUIDefaultAssetManager(), NULL, data);
-                            CFArrayAppendValue(textures, colorTexture);
+                            CFArrayAppendValue(colorTextures, colorTexture);
                             RERelease(data);
                         }
                         
-                        REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, textures);
-                        CFRelease(textures);
+                        REImagePresentationComponentSetMXITextureAssets(imagePresentationComponent, colorTextures);
                     }
                     
                     {
@@ -223,7 +238,7 @@
 //                            id<MTLDevice> device = MTLCreateSystemDefaultDevice();
 //                            id<MTLTexture> texture = [device newTextureWithDescriptor:descriptor];
 //                            [device release];
-//                            [ImagePresentationViewController renderMXIBackgroundWithMesh:meshAsset texture:scene.colorTexture textures:scene.colorTextures sceneType:scene.type verticalFoV:scene.verticalFOV aspectRatio:scene.aspectRatio nearDistance:scene.depthRange.near farDistance:scene.depthRange.far toBackgroundTexture:texture];
+//                            [ImagePresentationViewController renderMXIBackgroundWithMesh:meshAsset texture:colorTexture textures:colorTextures sceneType:scene.type verticalFoV:scene.verticalFOV aspectRatio:scene.aspectRatio nearDistance:scene.depthRange.near farDistance:scene.depthRange.far layerCount:scene.numLayers resoluationWidth:scene.resolutionWidth resoluationHeight:scene.resolutionHeight isPremultipliedAlpha:scene.isPremultipliedAlpha toBackgroundTexture:texture];
 //                            RERelease(meshAsset);
 //                            
 //                            struct RETextureAssetData *colorTextureAssetData = RETextureAssetDataCreateWithTexture(texture, (CFDictionaryRef)@{
@@ -236,6 +251,18 @@
 //                            RERelease(colorTexture);
 //                        }
                         REImagePresentationComponentSetMXITextureAsset(imagePresentationComponent, NULL);
+                    }
+                    
+                    if (colorTexture) {
+                        RERelease(colorTexture);
+                    }
+                    {
+                        CFIndex count = CFArrayGetCount(colorTextures);
+                        for (CFIndex idx = 0; idx < count; idx++) {
+                            struct REAsset *texture = (struct REAsset *)CFArrayGetValueAtIndex(colorTextures, idx);
+                            RERelease(texture);
+                        }
+                        CFRelease(colorTextures);
                     }
                     
                     REImagePresentationComponentSetMXIVerticalFOV(imagePresentationComponent, scene.verticalFOV);
@@ -377,9 +404,190 @@
     return asset;
 }
 
-+ (void)renderMXIBackgroundWithMesh:(struct REAsset *)mesh texture:(id<MTLTexture> _Nullable)texture textures:(NSArray<id<MTLTexture>> *)textures sceneType:(long)sceneType verticalFoV:(float)verticalFoV aspectRatio:(float)aspectRatio nearDistance:(float)nearDistance farDistance:(float)farDistance toBackgroundTexture:(id<MTLTexture>)backgroundTexture {
++ (void)renderMXIBackgroundWithMesh:(struct REAsset *)mesh texture:(struct REAsset * _Nullable)texture textures:(CFArrayRef)textures sceneType:(long)sceneType verticalFoV:(float)verticalFoV aspectRatio:(float)aspectRatio nearDistance:(float)nearDistance farDistance:(float)farDistance layerCount:(unsigned long)layerCount resoluationWidth:(unsigned int)resoluationWidth resoluationHeight:(unsigned int)resoluationHeight isPremultipliedAlpha:(BOOL)isPremultipliedAlpha toBackgroundTexture:(id<MTLTexture>)backgroundTexture {
     // $s17RealityFoundation16MXISceneResourceC19renderMXIBackground33_1E3AB1A79F9B511C8133C7993194CC62LL4mesh7texture8textures9sceneType11verticalFoV11aspectRatio12nearDistance03farY019toBackgroundTextureys13OpaquePointerV_APSgSayAPGAC0cS0OS4fSo10MTLTexture_ptKFZTf4nnnnnnnnnd_n
-//    abort();
+    // x27
+    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+    // x25
+    id<MTLSharedEvent> event = [device newSharedEvent];
+    // x22
+    struct REEntity *entity = REEntityCreate();
+    struct REComponent *perspectiveCameraComponent = REEntityGetOrAddComponentByClass(entity, REPerspectiveCameraComponentGetComponentType());
+    struct REComponent *tramsformComponent = REEntityGetOrAddComponentByClass(entity, RETransformComponentGetComponentType());
+    RETransformComponentSetLocalSRT(tramsformComponent, simd_make_float3(1.f, 1.f, 1.f), simd_make_float3(0.f, 0.f, 0.f), simd_make_float3(0.f, 0.f, 0.f));
+    
+    CGColorRef color = CGColorCreateGenericRGB(0., 0., 0., 0.);
+    
+    struct REEntity *childEntity = REEntityCreate();
+    struct REComponent *childTramsformComponent = REEntityGetOrAddComponentByClass(childEntity, RETransformComponentGetComponentType());
+    RETransformComponentSetLocalSRT(childTramsformComponent, simd_make_float3(1.f, 1.f, 1.f), simd_make_float3(0.f, 0.f, 0.f), simd_make_float3(0.f, 0.f, 0.f));
+    struct REComponent *childMXIComponent = REEntityGetOrAddComponentByClass(childEntity, REMXIComponentGetComponentType());
+    REMXIComponentSetMesh(childMXIComponent, mesh);
+    REMXIComponentSetTexture(childMXIComponent, texture);
+    REMXIComponentSetTextures(childMXIComponent, textures);
+    REMXIComponentSetRenderBackground(childMXIComponent, YES);
+    if (texture) {
+        REMXIComponentSetBackgroundTexture(childMXIComponent, texture);
+    }
+    REMXIComponentSetSceneType(childMXIComponent, (int)sceneType);
+    REMXIComponentSetVerticalFoV(childMXIComponent, verticalFoV);
+    REMXIComponentSetAspectRatio(childMXIComponent, aspectRatio);
+    REMXIComponentSetNearDistance(childMXIComponent, nearDistance);
+    REMXIComponentSetFarDistance(childMXIComponent, farDistance);
+    REMXIComponentSetLayerCount(childMXIComponent, layerCount);
+    REMXIComponentSetResolutionWidth(childMXIComponent, resoluationWidth);
+    REMXIComponentSetResolutionHeight(childMXIComponent, resoluationHeight);
+    REMXIComponentSetPremultipliedAlpha(childMXIComponent, isPremultipliedAlpha);
+    REMXIComponentSetRenderTwoPass(childMXIComponent, YES);
+    
+    if (!REMXIComponentGetRenderTwoPass(childMXIComponent)) {
+        abort();
+    }
+    
+    struct REEngine *engine = REEngineGetShared();
+    struct REServiceLocator *serviceLocator = REEngineGetServiceLocator(engine);
+    struct REAssetManager *assetManager = REServiceLocatorGetAssetManager(serviceLocator);
+    struct REAsset *emitterAsset = REAssetManagerCreateAssetHandle(assetManager, "engine:BuiltinRenderGraphResources/SimpleForward/simpleForwardCombinedPost.rerendergraphemitter");
+    struct RERenderManager *renderManager = REServiceLocatorGetRenderManager(serviceLocator);
+    RERenderGraphEmitterPreloadProvidersAssets(emitterAsset, renderManager);
+    RERenderGraphEmitterAssetRegisterProviders(emitterAsset, renderManager);
+    struct REECSManager *ecsManager = REServiceLocatorGetECSService(serviceLocator);
+    struct RERealityRendererSceneGroup *sceneGroup = REECSManagerCreateRealityRendererSceneGroup(ecsManager);
+    assert(sceneGroup != NULL);
+    struct REScene *scene = RESceneCreate("RealityRenderer.scene-1");
+    REECSManagerAddSceneToRealityRendererSceneGroup(ecsManager, sceneGroup, scene);
+    
+    struct REEngineOverlay *overlay = REEngineCreateOverlayForRealityRenderer(engine);
+    REEngineOverlaySetRealityRendererSceneGroup(overlay, sceneGroup);
+    
+    struct REAssetHandle *noDepthAsset = REAssetManagerCreateAssetHandle(assetManager, "engine:BuiltinRenderGraphResources/Common/realityRendererCameraNoDepth.rerendergraph");
+    struct REAssetHandle *noColorAsset = REAssetManagerCreateAssetHandle(assetManager, "engine:BuiltinRenderGraphResources/Common/realityRendererCameraNoColor.rerendergraph");
+    struct REAssetHandle *postProcessAsset = REAssetManagerCreateAssetHandle(assetManager, "engine:BuiltinRenderGraphResources/Common/realityRendererPostProcess.rerendergraph");
+    struct REAssetHandle *backgroundAsset = REAssetManagerCreateAssetHandle(assetManager, "engine:BuiltinRenderGraphResources/Common/realityRendererBackground.rematerialdefinition");
+    struct REAssetHandle *postProcessTonemapInplaceAsset = REAssetManagerCreateAssetHandle(assetManager, "engine:BuiltinRenderGraphResources/Common/realityRendererPostProcessTonemapInplace.rerendergraph");
+    
+    REAssetHandleLoadAsync(noDepthAsset);
+    REAssetHandleLoadAsync(noColorAsset);
+    struct REEngineConfiguration *engineConfiguration = REEngineConfigurationCreateFromEngine(engine);
+    if (REEngineConfigurationGetEnablePreloadEngineAssets(engineConfiguration)) {
+        REAssetHandleLoadAsync(postProcessAsset);
+        REAssetHandleLoadAsync(backgroundAsset);
+        REAssetHandleLoadAsync(postProcessTonemapInplaceAsset);
+    }
+    
+    if (REEngineConfigurationIsSolariumLeanModeEnabled(engineConfiguration)) {
+        struct REComponent *anchorComponent = REEntityGetOrAddComponentByClass(scene, REAnchorComponentGetComponentType());
+        REAnchorComponentSetAnchoredLocally(anchorComponent, YES);
+    } else {
+        struct RFServiceManager *serviceManager = RFServiceManagerCreate();
+        struct RFMeshReconstructionService *meshReconstructionService = RFMeshReconstructionServiceCreate();
+        RFServiceManagerSetMeshReconstructionService(serviceManager, meshReconstructionService);
+        struct RFAnchorManagementService *anchorManagementService = RFAnchorManagementServiceCreate();
+        RFServiceManagerSetAnchorManagementService(serviceManager, anchorManagementService);
+        struct RFLoggingService *loggingService = RFLoggingServiceCreate();
+        RFServiceManagerSetLoggingService(serviceManager, loggingService);
+        struct RFEnvironmentProbePlacementService *environmentProbePlacementService = RFEnvironmentProbePlacementServiceCreate();
+        RFServiceManagerSetEnvironmentProbePlacementService(serviceManager, environmentProbePlacementService);
+        struct RFAtmospherePlacementService *atmospherePlacementServiceCreate = RFAtmospherePlacementServiceCreate();
+        RFServiceManagerSetAtmospherePlacementService(serviceManager, atmospherePlacementServiceCreate);
+        struct RFAnchorDataProvider *anchorDataProvider = RFAnchorDataProviderCreate();
+        RFServiceManagerSetAnchorDataProvider(serviceManager, anchorDataProvider);
+    }
+    
+    struct REEntity *sceneUnderstandingRootEntity = REEntityCreate();
+    REEntitySetName(sceneUnderstandingRootEntity, "Scene Understanding Root Entity");
+    {
+        struct REComponent *anchorComponent = REEntityGetOrAddComponentByClass(sceneUnderstandingRootEntity, REAnchorComponentGetComponentType());
+        REAnchorComponentSetAnchoredLocally(anchorComponent, YES);
+        REEntityGetOrAddComponentByClass(sceneUnderstandingRootEntity, RESceneUnderstandingRenderOptionsComponentGetComponentType());
+        RESceneAddEntity(scene, sceneUnderstandingRootEntity);
+        REHideEntity(sceneUnderstandingRootEntity);
+        
+        // Ninja
+        uuid_t anchorIdentifier;
+        uuid_generate_random((unsigned char *)&anchorIdentifier);
+        REAnchorComponentSetAnchorIdentifier(anchorComponent, anchorIdentifier);
+        REAnchorComponentSetWorldTransform(anchorComponent, matrix_identity_float4x4);
+        REEntityAddComponentNoEvents(sceneUnderstandingRootEntity, RETransformComponentGetComponentType());
+        REEntitySendAddAndActivateComponentEvents(sceneUnderstandingRootEntity, RETransformComponentGetComponentType());
+    }
+    
+    if (REEngineConfigurationGetEnablePreloadMXIAssets(engineConfiguration)) {
+        if (REAssetManagerIsLoading(assetManager)) {
+            REAssetManagerUpdate(assetManager);
+            
+            if (REAssetManagerIsLoading(assetManager)) {
+                usleep(1000);
+                REAssetManagerUpdate(assetManager);
+                
+                if (REAssetManagerIsLoading(assetManager)) {
+                    usleep(1000);
+                    REAssetManagerUpdate(assetManager);
+                    
+                    if (REAssetManagerIsLoading(assetManager)) {
+                        usleep(1000);
+                        REAssetManagerUpdate(assetManager);
+                        
+                        if (REAssetManagerIsLoading(assetManager)) {
+                            usleep(1000);
+                            REAssetManagerUpdate(assetManager);
+                            
+                            if (REAssetManagerIsLoading(assetManager)) {
+                                usleep(1000);
+                                REAssetManagerUpdate(assetManager);
+                                
+                                if (REAssetManagerIsLoading(assetManager)) {
+                                    usleep(1000);
+                                    REAssetManagerUpdate(assetManager);
+                                    
+                                    if (REAssetManagerIsLoading(assetManager)) {
+                                        usleep(1000);
+                                        REAssetManagerUpdate(assetManager);
+                                        
+                                        if (REAssetManagerIsLoading(assetManager)) {
+                                            usleep(1000);
+                                            REAssetManagerUpdate(assetManager);
+                                            
+                                            if (REAssetManagerIsLoading(assetManager)) {
+                                                usleep(1000);
+                                                REAssetManagerUpdate(assetManager);
+                                                
+                                                if (REAssetManagerIsLoading(assetManager)) {
+                                                    usleep(1000);
+                                                    REAssetManagerUpdate(assetManager);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
+    //
+    
+//    struct REDrawingManager *drawingManager = REEngineCreateDrawingManager(engine);
+    assert(!REEngineOverlayIsEngineInsideTick(overlay));
+    
+//    struct REComponent *cameraViewDescriptorsComponent = REEntityGetOrAddComponentByClass(sceneUnderstandingRootEntity, RECameraViewDescriptorsComponentGetComponentType());
+//    RECameraViewDescriptorsComponentClearCameraViewDescriptors(cameraViewDescriptorsComponent);
+//    struct REComponent *graphFileProviderArrayComponent = REEntityGetOrAddComponentByClass(sceneUnderstandingRootEntity, RERenderGraphFileProviderArrayComponentGetComponentType());
+//    RERenderGraphFileProviderArrayComponentRemoveAll(graphFileProviderArrayComponent);
+    
+    RENetworkMarkComponentDirty(childMXIComponent);
+    REEngineOverlayEnterFrame(overlay, 1.f / 30.f);
+    REEngineOverlayFramePrepare(overlay);
+    REEngineOverlayFrameSimulate(overlay);
+    REEngineOverlayFrameCommit(overlay);
+    REEngineOverlayFrameExit(overlay);
+    
+    NSLog(@"%@", backgroundTexture);
 }
 
 @end

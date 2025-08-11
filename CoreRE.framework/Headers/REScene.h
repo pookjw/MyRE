@@ -6,5 +6,6 @@ NS_ASSUME_NONNULL_BEGIN
 RE_EXTERN void * RESceneAddEntity(struct REScene *scene, struct REEntity *entity);
 RE_EXTERN id RESceneGetAllEntitiesArray(struct REScene *scene);
 RE_EXTERN id RESceneGetSwiftObject(struct REScene *scene);
+RE_EXTERN struct REScene * RESceneCreate(const char *name);
 
 NS_ASSUME_NONNULL_END

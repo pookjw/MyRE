@@ -11,5 +11,7 @@ RE_EXTERN struct REAsset * REAssetManagerAVSampleBufferVideoRendererMemoryAssetC
 RE_EXTERN struct REAssetLoadRequest * REAssetManagerCreateAssetRequest(struct REAssetManager *assetManager);
 RE_EXTERN struct REAsset * REAssetManagerCreateTextureAssetFromData(struct REAssetManager *assetManager, const char * _Nullable name, struct RETextureAssetData *textureData);
 RE_EXTERN struct REAsset * REAssetManagerCreateMeshAssetWithDirectMesh(struct REAssetManager *assetManager, struct DRMesh *mesh);
+RE_EXTERN BOOL REAssetManagerIsLoading(struct REAssetManager *assetManager);
+RE_EXTERN void REAssetManagerUpdate(struct REAssetManager *assetManager);
 
 NS_ASSUME_NONNULL_END
