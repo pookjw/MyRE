@@ -86,9 +86,11 @@
         [options setObject:@(description.allowsOcclusionDetectionOverride) forKey:@"allowsOcclusionDetectionOverride"];
     }
     
-    [(NSDictionary *)RECAContextCreateDefaultOptions(NULL) enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+    NSDictionary<NSString *, id> *defaultOptions = (id)RECAContextCreateDefaultOptions(NULL);
+    [defaultOptions enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
         [options setObject:obj forKey:key];
     }];
+    [defaultOptions release];
     
     CAContext *context;
     if (description.shouldUseRemoteContext) {
